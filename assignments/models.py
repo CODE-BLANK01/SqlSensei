@@ -1,28 +1,34 @@
 from django.db import models
-from django.conf import settings
+from users.models import User
 from courses.models import Course
-from questions.models import Question
-
 
 class Assignment(models.Model):
+    assignment_id = models.AutoField(primary_key=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    deadline = models.DateField()
-    release_date = models.DateField()
-    questions = models.ManyToManyField(Question)
+    assignment_title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    deadline = models.DateTimeField()
+    release_date = models.DateTimeField(auto_now_add=True)
+    instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f"{self.title} - {self.course.title}"
+        return self.assignment_title
+
+    class Meta:
+        db_table = 'Assignments'
 
 
-class AssignmentSubmission(models.Model):
+class AssignmentSubmission(models.Model):  # ✅ THIS IS WHAT YOU NEED
+    submission_id = models.AutoField(primary_key=True)
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
-    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    submission_date = models.DateField()
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    submission_date = models.DateTimeField(auto_now_add=True)
     submission_status = models.CharField(max_length=50)
-    review_status = models.CharField(max_length=50)
-    score = models.FloatField()
+    review_status = models.CharField(max_length=50, blank=True, null=True)
+    score = models.FloatField(default=0.0)
 
     def __str__(self):
-        return f"Submission by {self.student} for {self.assignment.title}"
+        return f"{self.student} - {self.assignment}"
+
+    class Meta:
+        db_table = 'AssignmentSubmissions'

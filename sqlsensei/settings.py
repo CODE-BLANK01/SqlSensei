@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'widget_tweaks',
     'users',
     'courses',
     'questions',
@@ -88,16 +89,31 @@ WSGI_APPLICATION = 'sqlsensei.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 from decouple import config
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+import os
+if os.getenv('GAE_APPLICATION', None):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': '/cloudsql/db-group3-451421:us-west1:db-server',
+            'USER': 'sql_sensei_admin',
+            'PASSWORD': 'sqlsensei',
+            'NAME': 'SqlSensei3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'SqlSensei3',
+            'USER': 'sql_sensei_admin',
+            'PASSWORD': 'sqlsensei',
+            'HOST': '35.197.53.54',
+            'PORT': '3306'
+        }
+    }
+
+
+AUTH_USER_MODEL = 'users.User'
 
 
 # Password validation
