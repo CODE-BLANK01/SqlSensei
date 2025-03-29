@@ -3,10 +3,11 @@ from django.contrib.auth import login, logout, hashers
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm, CourseForm, AssignmentForm, QuestionForm
 from .models import User, Instructor, Student
-from courses.models import Course
+from courses.models import Course, CourseEnrollment
 from assignments.models import Assignment
 from questions.models import Question
 from django.urls import reverse
+from django.utils.timezone import now
 
 # ------------------------------
 # Auth Views
@@ -75,11 +76,13 @@ def instructor_dashboard(request):
     courses = Course.objects.filter(instructor=user_id)
     assignments = Assignment.objects.filter(instructor=user_id)
     questions = Question.objects.filter(instructor=user_id)
+    pending_enrollments = CourseEnrollment.objects.filter(enrollment_status='Pending')
 
     return render(request, "users/instructor_dashboard.html", {
         "courses": courses,
         "assignments": assignments,
         "questions": questions,
+        "pending_enrollments": pending_enrollments,
         "user_name": instructor.full_name,
         "show_manage_courses": True
     })
@@ -186,9 +189,38 @@ def create_question(request):
     return render(request, "create_question.html", {"form": form})
 
 def delete_question(request, question_id):
-    
+    if "user_id" not in request.session:
+        return redirect('/login/')
     question = Question.objects.filter(question_id=question_id)
     question.delete()
     messages.success(request, "Qurstion deleted successfully.")
     return redirect(reverse('instructor_dashboard') + '?show_manage_questions=true')
 
+
+def approve_student(request, enrollment_id):
+    if "user_id" not in request.session:
+        return redirect('/login/')
+    enrollment = get_object_or_404(CourseEnrollment, pk=enrollment_id)
+    #if request.user.is_staff:  # Ensuring only instructors can approve
+    enrollment.enrollment_status = 'Approved'
+    enrollment.approval_date = now()
+    enrollment.save()
+    messages.success(request, "Student approved successfully.")
+    return redirect(reverse("instructor_dashboard") + "?show_student_approvals=true")
+
+
+def deny_student(request, enrollment_id):
+    if "user_id" not in request.session:
+        return redirect('/login/')
+    enrollment = get_object_or_404(CourseEnrollment, pk=enrollment_id)
+    if request.user.is_staff:
+        enrollment.enrollment_status = 'Denied'
+        enrollment.approval_date = now()
+        enrollment.save()
+        messages.error(request, "Student enrollment denied.")
+    return redirect(reverse("instructor_dashboard") + "?show_student_approvals=true")
+
+
+def student_approvals(request):
+    # Your logic here (e.g., fetching pending students for approval)
+    return redirect(reverse("instructor_dashboard") + "?show_student_approvals=true")
