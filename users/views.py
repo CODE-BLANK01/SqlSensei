@@ -5,9 +5,10 @@ from .forms import RegisterForm, LoginForm, CourseForm, AssignmentForm, Question
 from .models import User, Instructor, Student
 from courses.models import Course, CourseEnrollment
 from assignments.models import Assignment
-from questions.models import Question
+from questions.models import Question, AssignmentQuestion
 from django.urls import reverse
 from django.utils.timezone import now
+from django.http import JsonResponse
 
 # ------------------------------
 # Auth Views
@@ -78,9 +79,19 @@ def instructor_dashboard(request):
     questions = Question.objects.filter(instructor=user_id)
     pending_enrollments = CourseEnrollment.objects.filter(enrollment_status='Pending')
 
+    assignment_data = []
+    for assignment in assignments:
+        assignment_questions = AssignmentQuestion.objects.filter(assignment=assignment)
+        questionsAssignment = [aq.question for aq in assignment_questions]
+        
+        assignment_data.append({
+            'assignment': assignment,
+            'questionsAssignment': questionsAssignment
+        })
+
     return render(request, "users/instructor_dashboard.html", {
         "courses": courses,
-        "assignments": assignments,
+        "assignments": assignment_data,
         "questions": questions,
         "pending_enrollments": pending_enrollments,
         "user_name": instructor.full_name,
@@ -126,6 +137,8 @@ def create_assignment(request):
 
     if request.method == "POST":
         form = AssignmentForm(request.POST)
+        print(request.POST)  # Debugging: Check form data
+        selected_questions = request.POST.get("questions", "").split(",")  # Get selected question IDs
         if form.is_valid():
             assignment = form.save(commit=False)
             course_id = request.POST.get("course_id")
@@ -134,6 +147,14 @@ def create_assignment(request):
             assignment.course = course
             assignment.instructor = instructor
             assignment.save()
+            print(f"selected_questions: {selected_questions}")  # Print errors if form is invalid
+            # Insert records into Assignment_Questions table
+            for question_id in selected_questions:
+                if question_id.strip():  # Ensure it's not empty
+                    question = get_object_or_404(Question, question_id=int(question_id))
+                    AssignmentQuestion.objects.create(assignment=assignment, question=question)
+
+
             messages.success(request, "Assignment created successfully.")
             return redirect(reverse("instructor_dashboard") + "?show_manage_assignments=true")
     else:
@@ -171,9 +192,6 @@ def create_question(request):
 
     if request.method == "POST":
         form = QuestionForm(request.POST)
-        print(request.POST)  # Debugging: Check form data
-        if not form.is_valid():
-            print(f"DEBUG: Form errors: {form.errors}")  # Print errors if form is invalid
 
         if form.is_valid():
             question = form.save(commit=False)
@@ -224,3 +242,10 @@ def deny_student(request, enrollment_id):
 def student_approvals(request):
     # Your logic here (e.g., fetching pending students for approval)
     return redirect(reverse("instructor_dashboard") + "?show_student_approvals=true")
+
+def get_assignment_questions(request, assignment_id):
+    # Fetch the questions for the given assignment
+    assignment_questions = AssignmentQuestion.objects.filter(assignment_id=assignment_id)
+    questions = [aq.question.question_title for aq in assignment_questions]
+    
+    return JsonResponse({'questions': questions})

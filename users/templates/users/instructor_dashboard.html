@@ -6,6 +6,7 @@
     <title>Instructor Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             display: flex;
@@ -47,8 +48,8 @@
         <hr>
 
         <!-- Course Management -->
-        <a class="active" data-bs-toggle="collapse" href="#courseMenu" role="button">📚 Course Management</a>
-        <div class="collapse show" id="courseMenu">
+        <a data-bs-toggle="collapse" href="#courseMenu" role="button">📚 Course Management</a>
+        <div class="collapse" id="courseMenu">
             <a href="#" class="ps-3" onclick="showForm()">➕ Create Course</a>
             <a id = "manageCoursesBtn" href="#" class="ps-3" onclick="showManageCourses()">📌 Manage Courses</a>
         </div>
@@ -161,6 +162,11 @@
                     </select>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label">Questions</label>
+                    <input type="text" class="form-control" id="selectedQuestions" readonly placeholder="Select questions" onclick="openQuestionModal()">
+                    <input type="hidden" name="questions" id="questionsInput">
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Assignment Title</label>
                     <input type="text" name="assignment_title" class="form-control" required>
                 </div>
@@ -189,20 +195,76 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for assignment in assignments %}
-                    <tr>
-                        <td>{{ assignment.assignment_title }}</td>
-                        <td>{{ assignment.course.course_title }}</td>
-                        <td>{{ assignment.deadline }}</td>
+                    {% for assignment_data in assignments %}
+                    <tr class="assignment-row" data-assignment-id="{{ assignment_data.assignment.assignment_id }}">
+                        <td>{{ assignment_data.assignment.assignment_title }}</td>
+                        <td>{{ assignment_data.assignment.course.course_title }}</td>
+                        <td>{{ assignment_data.assignment.deadline }}</td>
                         <td>
                             <a href="#">Edit</a> | 
-                            <a href="#" onclick="confirmDeleteAssignment({{ assignment.assignment_id }})" class="text-danger">Delete</a>
+                            <a href="#" onclick="confirmDeleteAssignment({{ assignment_data.assignment.assignment_id }})" class="text-danger">Delete</a>
+                        </td>
+                    </tr>
+                    <tr class="questions-row" id="questions-{{ assignment_data.assignment.assignment_id }}" style="display: none;">
+                        <td colspan="4">
+                            <ul></ul> <!-- The questions will be added here dynamically -->
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
+                
             </table>
         </div>
+
+        <div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="questionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="questionModalLabel">Select Questions</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Filters -->
+                        <div class="mb-3">
+                            <input type="text" id="searchQuestion" class="form-control" placeholder="Search questions..." onkeyup="filterQuestionsInModal()">
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalDifficultyFilter">Difficulty:</label>
+                            <select id="modalDifficultyFilter" class="form-control" onchange="filterQuestionsInModal()">
+                                <option value="">All</option>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalAccessTypeFilter">Access Type:</label>
+                            <select id="modalAccessTypeFilter" class="form-control" onchange="filterQuestionsInModal()">
+                                <option value="">All</option>
+                                <option value="Public">Public</option>
+                                <option value="Private">Private</option>
+                            </select>
+                        </div>
+        
+                        <!-- Question List -->
+                        <select id="questionList" class="form-control" multiple>
+                            {% for question in questions %}
+                                <option value="{{ question.question_id }}" 
+                                        data-difficulty="{{ question.difficulty_level }}" 
+                                        data-access="{{ question.access_type }}">
+                                    {{ question.question_title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="selectQuestions()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
 
         <!-- Question Creation Form (Hidden Initially) -->
         <div id="questionFormContainer" class="hidden">
@@ -243,7 +305,24 @@
         <!-- Manage Questions Section (Hidden Initially) -->
         <div id="manageQuestionsContainer" class="hidden {% if show_manage_questions %}show{% endif %}">
             <h3>Manage Questions</h3>
-            <table class="table table-bordered">
+            <!-- Filters -->
+            <div style="margin-bottom: 15px;">
+                <label for="difficultyFilter">Difficulty:</label>
+                <select id="difficultyFilter" onchange="filterQuestions()">
+                    <option value="">All</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                </select>
+
+                <label for="accessTypeFilter">Access Type:</label>
+                <select id="accessTypeFilter" onchange="filterQuestions()">
+                    <option value="">All</option>
+                    <option value="Public">Public</option>
+                    <option value="Private">Private</option>
+                </select>
+            </div>
+            <table class="table table-bordered" id="questionsTable">
                 <thead>
                     <tr>
                         <th>Question Title</th>
@@ -255,7 +334,7 @@
                 </thead>
                 <tbody>
                     {% for question in questions %}
-                    <tr>
+                    <tr data-difficulty="{{ question.difficulty_level }}" data-access="{{ question.access_type }}">
                         <td>{{ question.question_title }}</td>
                         <td>{{ question.topic }}</td>
                         <td>{{ question.difficulty_level }}</td>
@@ -405,6 +484,7 @@
             }
         }
         function showManageStudentApprovals() {
+            console.log("showForm function triggered"); // Debugging line
             document.getElementById("manageStudentApprovalsContainer").classList.remove("hidden");
             document.getElementById("courseFormContainer").classList.add("hidden");
             document.getElementById("manageCoursesContainer").classList.add("hidden");
@@ -412,6 +492,111 @@
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
+        }
+        function openQuestionModal() {
+            // Reset any previous selections
+            console.log("showForm function triggered"); // Debugging line
+            document.getElementById('questionList').value = "";
+            $('#questionModal').modal('show');
+        }
+        
+        // Handle question selection and update the input field
+        function selectQuestions() {
+            const selectedOptions = document.getElementById('questionList').selectedOptions;
+            const selectedValues = Array.from(selectedOptions).map(option => option.value);
+            
+            // Update the hidden input with selected question IDs
+            document.getElementById('questionsInput').value = selectedValues.join(',');
+            
+            // Update the input field to display selected question titles
+            const selectedTitles = Array.from(selectedOptions).map(option => option.text).join(', ');
+            document.getElementById('selectedQuestions').value = selectedTitles;
+            
+            // Close the modal
+            $('#questionModal').modal('hide');
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const assignmentRows = document.querySelectorAll('.assignment-row');
+        
+            assignmentRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    const assignmentId = row.getAttribute('data-assignment-id');
+                    const questionsRow = document.getElementById(`questions-${assignmentId}`);
+        
+                    // If the questions are already loaded, toggle visibility
+                    if (questionsRow.style.display === 'none' || questionsRow.style.display === '') {
+                        // Check if the questions have already been loaded
+                        if (!questionsRow.hasAttribute('data-loaded')) {
+                            // Make an AJAX request to fetch the questions for the assignment
+                            fetch(`/users/instructor/get-questions/${assignmentId}/`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    const questionsList = questionsRow.querySelector('ul');
+                                    questionsList.innerHTML = ''; // Clear any previous content
+        
+                                    data.questions.forEach(question => {
+                                        const listItem = document.createElement('li');
+                                        listItem.textContent = question;
+                                        questionsList.appendChild(listItem);
+                                    });
+        
+                                    // Mark the questions as loaded
+                                    questionsRow.setAttribute('data-loaded', 'true');
+                                    questionsRow.style.display = 'table-row'; // Show the questions
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching questions:', error);
+                                });
+                        } else {
+                            questionsRow.style.display = 'table-row'; // Show the questions if already loaded
+                        }
+                    } else {
+                        questionsRow.style.display = 'none'; // Hide the questions if already visible
+                    }
+                });
+            });
+        });
+        function filterQuestions() {
+            
+            console.log("Filtering triggered!");
+            
+            var difficulty = document.getElementById("difficultyFilter").value;
+            console.log(difficulty);
+            var accessType = document.getElementById("accessTypeFilter").value;
+            console.log(accessType);
+            var rows = document.querySelectorAll("#questionsTable tbody tr");
+            console.log(rows);
+    
+            rows.forEach(row => {
+                var rowDifficulty = row.getAttribute("data-difficulty");
+                console.log(rowDifficulty);
+                var rowAccess = row.getAttribute("data-access");
+    
+                // Show row only if it matches both filters or if filters are not selected
+                var show = (difficulty === "" || rowDifficulty === difficulty) &&
+                           (accessType === "" || rowAccess === accessType);
+    
+                row.style.display = show ? "" : "none";
+            });
+        }
+        function filterQuestionsInModal() {
+            var searchText = document.getElementById("searchQuestion").value.toLowerCase();
+            var difficulty = document.getElementById("modalDifficultyFilter").value;
+            var accessType = document.getElementById("modalAccessTypeFilter").value;
+    
+            var options = document.querySelectorAll("#questionList option");
+    
+            options.forEach(option => {
+                var questionTitle = option.textContent.toLowerCase();
+                var questionDifficulty = option.getAttribute("data-difficulty") || "";
+                var questionAccess = option.getAttribute("data-access") || "";
+    
+                var matchesSearch = searchText === "" || questionTitle.includes(searchText);
+                var matchesDifficulty = difficulty === "" || questionDifficulty === difficulty;
+                var matchesAccess = accessType === "" || questionAccess === accessType;
+    
+                option.style.display = (matchesSearch && matchesDifficulty && matchesAccess) ? "" : "none";
+            });
         }
     </script>
 
