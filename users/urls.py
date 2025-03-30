@@ -1,5 +1,5 @@
 # users/urls.py
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -15,4 +15,5 @@ urlpatterns = [
     path("instructor/create-assignment/", views.create_assignment, name="create_assignment"),
     path("instructor/delete-course/<int:course_id>/", views.delete_course, name="delete_course"),
     path("instructor/delete-assignment/<int:assignment_id>/", views.delete_assignment, name="delete_assignment"),
+    path('course-enrollment/', include('courses.urls')),
 ]

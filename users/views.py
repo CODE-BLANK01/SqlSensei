@@ -85,7 +85,13 @@ def instructor_dashboard(request):
 def student_dashboard(request):
     if "user_id" not in request.session:
         return redirect("login")
-    return render(request, "users/student_dashboard.html")
+    user_id = request.session.get("user_id")
+    student = User.objects.get(user_id = user_id)
+    courses = Course.objects.all()
+    return render(request, "users/student_dashboard.html", {
+        "courses": courses, 
+        "user_name": student.full_name
+    })
 
 
 # ------------------------------

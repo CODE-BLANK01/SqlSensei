@@ -16,3 +16,26 @@ class Course(models.Model):
 
     class Meta:
         db_table = 'Courses'
+
+class CourseEnrollment(models.Model):
+
+    ENROLLMENT_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Denied', 'Denied'),
+        ('Dropped', 'Dropped'),
+    ]
+    
+    enrollment_id = models.AutoField(primary_key=True)
+    student_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column='student_id')
+    course_id = models.ForeignKey(Course, on_delete=models.CASCADE, db_column='course_id')
+    enrollment_date = models.DateTimeField(auto_now_add=True)
+    enrollment_status = models.CharField(max_length=50, choices=ENROLLMENT_STATUS_CHOICES, default='Pending')
+    approval_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('student_id', 'course_id') 
+        db_table = 'Course_Enrollments'
+
+    def __str__(self):
+        return f"{self.student_id.username} -> {self.course_id.course_title} ({self.enrollment_status})"
