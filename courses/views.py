@@ -13,7 +13,7 @@ def apply_for_course(request):
             course = form.cleaned_data['course_id']
             student = User.objects.get(user_id=request.session['user_id'])
 
-            # 防止重复报名
+            # avoid duplicate application
             existing = CourseEnrollment.objects.filter(student_id=student, course_id=course).exists()
             if existing:
                 messages.warning(request, "You already applied for this course.")
