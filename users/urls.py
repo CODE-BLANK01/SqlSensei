@@ -20,4 +20,5 @@ urlpatterns = [
     path("instructor/approve-student/<int:enrollment_id>/", views.approve_student, name="approve_student"),
     path("instructor/deny-student/<int:enrollment_id>/", views.deny_student, name="deny_student"),
     path("instructor/student-approvals/", views.student_approvals, name='student_approvals'),
+    path('instructor/get-questions/<int:assignment_id>/', views.get_assignment_questions, name='get_assignment_questions'),
 ]

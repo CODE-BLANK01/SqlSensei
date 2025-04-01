@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from users.models import User
+from assignments.models import Assignment
 
 class Question(models.Model):
     QUESTION_ACCESS_TYPES = [
@@ -24,3 +25,12 @@ class Question(models.Model):
 
     class Meta:
         db_table = 'Questions'
+
+class AssignmentQuestion(models.Model):
+    assignment_q_id = models.AutoField(primary_key=True)
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "Assignment_Questions"  # Ensure it matches your given table name
+        unique_together = ('assignment', 'question')
