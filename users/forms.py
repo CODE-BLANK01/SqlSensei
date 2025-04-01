@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, hashers
 from .models import User, Instructor, Student
 from courses.models import Course
 from assignments.models import Assignment
+from questions.models import Question
 
 
 class RegisterForm(forms.ModelForm):
@@ -64,3 +65,7 @@ class AssignmentForm(forms.ModelForm):
         model = Assignment
         fields = ['assignment_title', 'description', 'deadline']
 
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ['question_title', 'topic', 'difficulty_level', 'description', 'access_type']

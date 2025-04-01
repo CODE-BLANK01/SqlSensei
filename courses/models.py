@@ -18,7 +18,10 @@ class Course(models.Model):
         db_table = 'Courses'
 
 class CourseEnrollment(models.Model):
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
     ENROLLMENT_STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),

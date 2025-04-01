@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, hashers
 from django.contrib import messages
-from .forms import RegisterForm, LoginForm, CourseForm, AssignmentForm
+from .forms import RegisterForm, LoginForm, CourseForm, AssignmentForm, QuestionForm
 from .models import User, Instructor, Student
-from courses.models import Course
+from courses.models import Course, CourseEnrollment
 from assignments.models import Assignment
+from questions.models import Question, AssignmentQuestion
 from django.urls import reverse
+from django.utils.timezone import now
+from django.http import JsonResponse
 
 # ------------------------------
 # Auth Views
@@ -73,10 +76,24 @@ def instructor_dashboard(request):
     instructor = User.objects.get(user_id=user_id)
     courses = Course.objects.filter(instructor=user_id)
     assignments = Assignment.objects.filter(instructor=user_id)
+    questions = Question.objects.filter(instructor=user_id)
+    pending_enrollments = CourseEnrollment.objects.filter(enrollment_status='Pending')
+
+    assignment_data = []
+    for assignment in assignments:
+        assignment_questions = AssignmentQuestion.objects.filter(assignment=assignment)
+        questionsAssignment = [aq.question for aq in assignment_questions]
+        
+        assignment_data.append({
+            'assignment': assignment,
+            'questionsAssignment': questionsAssignment
+        })
 
     return render(request, "users/instructor_dashboard.html", {
         "courses": courses,
-        "assignments": assignments,
+        "assignments": assignment_data,
+        "questions": questions,
+        "pending_enrollments": pending_enrollments,
         "user_name": instructor.full_name,
         "show_manage_courses": True
     })
@@ -126,6 +143,8 @@ def create_assignment(request):
 
     if request.method == "POST":
         form = AssignmentForm(request.POST)
+        print(request.POST)  # Debugging: Check form data
+        selected_questions = request.POST.get("questions", "").split(",")  # Get selected question IDs
         if form.is_valid():
             assignment = form.save(commit=False)
             course_id = request.POST.get("course_id")
@@ -134,6 +153,14 @@ def create_assignment(request):
             assignment.course = course
             assignment.instructor = instructor
             assignment.save()
+            print(f"selected_questions: {selected_questions}")  # Print errors if form is invalid
+            # Insert records into Assignment_Questions table
+            for question_id in selected_questions:
+                if question_id.strip():  # Ensure it's not empty
+                    question = get_object_or_404(Question, question_id=int(question_id))
+                    AssignmentQuestion.objects.create(assignment=assignment, question=question)
+
+
             messages.success(request, "Assignment created successfully.")
             return redirect(reverse("instructor_dashboard") + "?show_manage_assignments=true")
     else:
@@ -164,3 +191,67 @@ def delete_assignment(request, assignment_id):
     assignment.delete()
     messages.success(request, "Assignment deleted successfully.")
     return redirect(reverse("instructor_dashboard") + '?show_manage_assignments=true')
+
+def create_question(request):
+    if "user_id" not in request.session:
+        return redirect('/login/')
+
+    if request.method == "POST":
+        form = QuestionForm(request.POST)
+
+        if form.is_valid():
+            question = form.save(commit=False)
+            user_id = request.session.get("user_id")
+            created_by = User.objects.get(user_id=user_id)
+            question.instructor = created_by  # Assign the creator
+            question.save()
+            messages.success(request, "Question created successfully.")
+            return redirect(reverse("instructor_dashboard") + "?show_manage_questions=true") 
+    else:
+        form = QuestionForm()
+
+    return render(request, "create_question.html", {"form": form})
+
+def delete_question(request, question_id):
+    if "user_id" not in request.session:
+        return redirect('/login/')
+    question = Question.objects.filter(question_id=question_id)
+    question.delete()
+    messages.success(request, "Qurstion deleted successfully.")
+    return redirect(reverse('instructor_dashboard') + '?show_manage_questions=true')
+
+
+def approve_student(request, enrollment_id):
+    if "user_id" not in request.session:
+        return redirect('/login/')
+    enrollment = get_object_or_404(CourseEnrollment, pk=enrollment_id)
+    #if request.user.is_staff:  # Ensuring only instructors can approve
+    enrollment.enrollment_status = 'Approved'
+    enrollment.approval_date = now()
+    enrollment.save()
+    messages.success(request, "Student approved successfully.")
+    return redirect(reverse("instructor_dashboard") + "?show_student_approvals=true")
+
+
+def deny_student(request, enrollment_id):
+    if "user_id" not in request.session:
+        return redirect('/login/')
+    enrollment = get_object_or_404(CourseEnrollment, pk=enrollment_id)
+    if request.user.is_staff:
+        enrollment.enrollment_status = 'Denied'
+        enrollment.approval_date = now()
+        enrollment.save()
+        messages.error(request, "Student enrollment denied.")
+    return redirect(reverse("instructor_dashboard") + "?show_student_approvals=true")
+
+
+def student_approvals(request):
+    # Your logic here (e.g., fetching pending students for approval)
+    return redirect(reverse("instructor_dashboard") + "?show_student_approvals=true")
+
+def get_assignment_questions(request, assignment_id):
+    # Fetch the questions for the given assignment
+    assignment_questions = AssignmentQuestion.objects.filter(assignment_id=assignment_id)
+    questions = [aq.question.question_title for aq in assignment_questions]
+    
+    return JsonResponse({'questions': questions})
