@@ -1,0 +1,25 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+  <h3>💬 Group Chat: {{ group.group_name }}</h3>
+  <form method="post">
+    {% csrf_token %}
+    <textarea
+      name="content"
+      class="form-control mb-2"
+      placeholder="Type your message here..."
+      required
+    ></textarea>
+    <button type="submit" class="btn btn-success">Send</button>
+  </form>
+
+  <hr />
+  {% for msg in messages %}
+  <p>
+    <strong>{{ msg.sender.full_name }}:</strong> {{ msg.content }}
+    <em>{{ msg.date_sent }}</em>
+  </p>
+  {% empty %}
+  <p>No messages yet in this group.</p>
+  {% endfor %}
+</div>
+{% endblock %}

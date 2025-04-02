@@ -1,0 +1,45 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-5">
+  <h3>📬 Message Inbox</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label>Select User:</label>
+      <select name="receiver_id" class="form-control" required>
+        {% for u in users %}
+        <option value="{{ u.id }}">{{ u.full_name }} ({{ u.role }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <textarea
+      name="content"
+      class="form-control mb-2"
+      rows="3"
+      placeholder="Enter your message"
+      required
+    ></textarea>
+    <button type="submit" class="btn btn-primary">Send Message</button>
+  </form>
+
+  <hr />
+  <h4>📥 Received Messages</h4>
+  {% for msg in received %}
+  <p>
+    <strong>{{ msg.sender.full_name }}:</strong> {{ msg.content }}
+    <em>{{ msg.date_sent }}</em>
+  </p>
+  {% empty %}
+  <p>No received messages.</p>
+  {% endfor %}
+
+  <h4 class="mt-4">📤 Sent Messages</h4>
+  {% for msg in sent %}
+  <p>
+    <strong>To {{ msg.receiver.full_name }}:</strong> {{ msg.content }}
+    <em>{{ msg.date_sent }}</em>
+  </p>
+  {% empty %}
+  <p>No sent messages.</p>
+  {% endfor %}
+</div>
+{% endblock %}
