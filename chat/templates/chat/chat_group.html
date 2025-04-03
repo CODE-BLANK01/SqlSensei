@@ -1,25 +1,41 @@
-{% extends 'base.html' %} {% block content %}
-<div class="container mt-5">
-  <h3>💬 Group Chat: {{ group.group_name }}</h3>
-  <form method="post">
-    {% csrf_token %}
-    <textarea
-      name="content"
-      class="form-control mb-2"
-      placeholder="Type your message here..."
-      required
-    ></textarea>
-    <button type="submit" class="btn btn-success">Send</button>
-  </form>
-
-  <hr />
-  {% for msg in messages %}
-  <p>
-    <strong>{{ msg.sender.full_name }}:</strong> {{ msg.content }}
-    <em>{{ msg.date_sent }}</em>
-  </p>
-  {% empty %}
-  <p>No messages yet in this group.</p>
-  {% endfor %}
+<div id="chat-container">
+    <div id="messages"></div>
+    <input type="text" id="message-input" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
 </div>
-{% endblock %}
+
+<script>
+    const roomId = 1;  // Replace with actual chat room ID
+    const csrfToken = "{{ csrf_token }}";  // Pass CSRF token
+
+    function fetchMessages() {
+        fetch(`/chatrooms/${roomId}/messages/`)
+            .then(response => response.json())
+            .then(data => {
+                const messagesDiv = document.getElementById("messages");
+                messagesDiv.innerHTML = "";
+                data.forEach(msg => {
+                    messagesDiv.innerHTML += `<p><b>${msg.sender_name}:</b> ${msg.message}</p>`;
+                });
+            });
+    }
+
+    function sendMessage() {
+        const message = document.getElementById("message-input").value;
+        fetch(`/messages/send/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ room_id: roomId, message: message })
+        })
+        .then(response => response.json())
+        .then(() => {
+            document.getElementById("message-input").value = "";
+            fetchMessages();
+        });
+    }
+
+    setInterval(fetchMessages, 3000);  // Refresh messages every 3 seconds
+</script>

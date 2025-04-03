@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignments & Questions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .assignment-row {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="container mt-4">
+        <h2 class="mb-3">Assignments & Questions</h2>
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Assignment</th>
+                    <th>Questions</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in assignments %}
+                <!-- Assignment row (clickable) -->
+                <tr class="table-primary assignment-row" data-bs-toggle="collapse" data-bs-target="#questions-{{ data.assignment.assignment_id }}">
+                    <td colspan="2">
+                        <strong>{{ data.assignment.assignment_title }}</strong>
+                        <span class="text-muted">(Click to toggle questions)</span>
+                    </td>
+                    <td>
+                        <form method="POST" enctype="multipart/form-data" action="{% url 'submit_assignment' data.assignment.assignment_id %}">
+                            {% csrf_token %}
+                            <!-- Attach file input -->
+                            <input type="file" id="zipFile-{{ data.assignment.assignment_id }}" name="zipFile" accept=".zip" required>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </td>
+                </tr>
+                
+                <!-- Questions Row (Collapsible) -->
+                <tr>
+                    <td colspan="4">
+                        <div id="questions-{{ data.assignment.assignment_id }}" class="collapse">
+                            {% if data.questionsAssignment %}
+                                <ul class="list-group">
+                                    {% for question in data.questionsAssignment %}
+                                        <li class="list-group-item">
+                                            <strong>{{ question.question_title }}</strong> - {{ question.description }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted">No questions assigned.</p>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function confirmSubmitAssignment(assignmentId) {
+            if (confirm("Are you sure you want to submit this assignment?")) {
+                window.location.href = `/users/instructor/submit-assignment/${assignmentId}/`;
+            }
+        }
+    </script>
+</body>
+</html>
+{% endblock %}

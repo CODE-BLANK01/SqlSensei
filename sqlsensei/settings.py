@@ -32,7 +32,7 @@ DEBUG = True
 
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'feedback',
     'leaderboard',
     'chat',
+    'rest_framework',
 ]
 
 
@@ -83,9 +84,9 @@ TEMPLATES = [
     },
 ]
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
 
 WSGI_APPLICATION = 'sqlsensei.wsgi.application'
 
@@ -100,8 +101,8 @@ if os.getenv('GAE_APPLICATION', None):
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'HOST': '/cloudsql/db-group3-451421:us-west1:db-server',
-            'USER': 'sql_sensei_admin',
-            'PASSWORD': 'sqlsensei',
+            'USER': 'root',
+            'PASSWORD': 'group-phase3',
             'NAME': 'SqlSensei3',
         }
     }
@@ -110,8 +111,8 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'SqlSensei3',
-            'USER': 'sql_sensei_admin',
-            'PASSWORD': 'sqlsensei',
+            'USER': 'root',
+            'PASSWORD': 'group-phase3',
             'HOST': '35.197.53.54',
             'PORT': '3306'
         }
@@ -155,9 +156,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_ROOT = 'static'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

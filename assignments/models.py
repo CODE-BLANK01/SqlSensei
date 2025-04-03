@@ -18,17 +18,18 @@ class Assignment(models.Model):
         db_table = 'Assignments'
 
 
-class AssignmentSubmission(models.Model):  # ✅ THIS IS WHAT YOU NEED
+class AssignmentSubmission(models.Model):
     submission_id = models.AutoField(primary_key=True)
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     submission_date = models.DateTimeField(auto_now_add=True)
-    submission_status = models.CharField(max_length=50)
-    review_status = models.CharField(max_length=50, blank=True, null=True)
-    score = models.FloatField(default=0.0)
+    submitted_answer = models.FileField(upload_to='submissions/%Y/%m/%d/')
+    submission_status = models.CharField(max_length=50, choices=[('Pending', 'Pending'), ('Submitted', 'Submitted'), ('Late', 'Late')])
+    grade = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    review_status = models.CharField(max_length=50, choices=[('Graded', 'Graded'), ('Not Graded', 'Not Graded')])
 
     def __str__(self):
-        return f"{self.student} - {self.assignment}"
-
+        return f"Submission by {self.student} for {self.assignment.title}"
+    
     class Meta:
-        db_table = 'AssignmentSubmissions'
+        db_table = 'Assignment_Submissions'

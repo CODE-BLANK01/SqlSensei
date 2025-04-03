@@ -34,3 +34,20 @@ class AssignmentQuestion(models.Model):
     class Meta:
         db_table = "Assignment_Questions"  # Ensure it matches your given table name
         unique_together = ('assignment', 'question')
+
+class QuestionAttempt(models.Model):
+    attempt_id = models.AutoField(primary_key=True)
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    attempt_date = models.DateTimeField(auto_now_add=True)
+    attempt_number = models.IntegerField(default=1)  
+    student_query = models.TextField()
+    feedback = models.TextField(blank=True, null=True)
+    attempt_success = models.BooleanField(default=False)
+    execution_time = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Attempt {self.attempt_number} by {self.student} on {self.question}"
+
+    class Meta:
+        db_table = "Questions_Attempts"

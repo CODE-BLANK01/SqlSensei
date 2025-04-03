@@ -38,6 +38,67 @@
         .hidden {
             display: none;
         }
+        /* Chat Assistant Styles */
+        #sqlAssistantContainer {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            height: 80vh;
+            max-width: 800px;
+            margin: auto;
+        }
+        #chatBox {
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px;
+            height: 60vh;
+            overflow-y: scroll;
+            margin-bottom: 20px;
+            max-height: 500px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .chat-message {
+            margin-bottom: 15px;
+        }
+        .chat-message.bot {
+            text-align: left;
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .chat-message p {
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .chat-message.bot p {
+            background-color: #e9ecef;
+            max-width: 75%;
+        }
+        .chat-message.user p {
+            background-color: #007bff;
+            color: white;
+            max-width: 75%;
+        }
+        #query {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #submitBtn {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #submitBtn:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -46,6 +107,9 @@
     <div class="sidebar">
         <h4 class="text-center">Instructor Dashboard</h4>
         <hr>
+
+        <!-- Home -->
+        <a class="ps-3" href="#" onclick="showSqlAssistant(event)">🏠 Home</a>
 
         <!-- Course Management -->
         <a data-bs-toggle="collapse" href="#courseMenu" role="button">📚 Course Management</a>
@@ -59,6 +123,7 @@
         <div class="collapse" id="assignmentMenu">
             <a href="#" class="ps-3" onclick="showAssignmentForm()">➕ Create Assignment</a>
             <a href="#" class="ps-3" onclick="showManageAssignments()">📌 Manage Assignments</a>
+            <a href="{% url 'grade_assignment' %}" class="ps-3">✅ Grade Assignments</a>
         </div>
 
          <!-- Question Bank -->
@@ -70,6 +135,8 @@
 
         <!-- Student Approvals -->
         <a href="{% url 'student_approvals' %}" class="ps-3" onclick="showManageStudentApprovals()">✅ Student Approvals</a>
+
+        <a href="#" onclick="showMessages()" class="ps-3">✉️ Messages</a>
 
         <!-- Logout -->
         <hr>
@@ -176,7 +243,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Deadline</label>
-                    <input type="datetime-local" name="deadline" class="form-control" required>
+                    <input type="date" name="deadline" class="form-control" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Create Assignment</button>
             </form>
@@ -248,7 +315,7 @@
         
                         <!-- Question List -->
                         <select id="questionList" class="form-control" multiple>
-                            {% for question in questions %}
+                            {% for question in allQuestions %}
                                 <option value="{{ question.question_id }}" 
                                         data-difficulty="{{ question.difficulty_level }}" 
                                         data-access="{{ question.access_type }}">
@@ -363,8 +430,8 @@
                 <tbody>
                     {% for enrollment in pending_enrollments %}
                     <tr>
-                        <td>{{ enrollment.student.full_name }}</td>
-                        <td>{{ enrollment.course.course_title }}</td>
+                        <td>{{ enrollment.student_id.full_name }}</td>
+                        <td>{{ enrollment.course_id.course_title }}</td>
                         <td>{{ enrollment.enrollment_date }}</td>
                         <td>
                             <a href="{% url 'approve_student' enrollment.enrollment_id %}">Approve</a> | 
@@ -378,6 +445,95 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <div id="sqlAssistantContainer" class="hidden">
+            <h1>SQL Query Assistant</h1>
+
+            <div id="chatBox">
+                <!-- Bot messages will appear here -->
+                {% if sql_query %}
+                    <div class="chat-message bot">
+                        <p>Generated SQL: {{ sql_query }}</p>
+                    </div>
+                {% endif %}
+                {% if results %}
+                    <div class="chat-message bot">
+                        <p>Results:</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    {% for col in columns %}
+                                    <th>{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in results %}
+                                <tr>
+                                    {% for cell in row %}
+                                    <td>{{ cell }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- User's input message -->
+            <div class="chat-message user">
+                <p>{{ query }}</p>
+            </div>
+
+            <!-- Input form for new queries -->
+            <form method="post" action="{% url 'sql_query' %}">
+                {% csrf_token %}
+                <input type="text" name="query" id="query" placeholder="Ask your query here..." required />
+                <button type="submit" id="submitBtn">Submit</button>
+            </form>
+        </div>
+            <!-- Inbox Messages Section -->
+        <div id="messagesContainer" class="hidden">
+            <h3>Inbox</h3>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Sender</th>
+                        <th>Message</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for message in messages %}
+                    <tr>
+                        <td>{{ message.sender.full_name }}</td>
+                        <td>{{ message.message_content }}</td>
+                        <td>{{ message.message_date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">No messages yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h3>Send a Message</h3>
+            <form method="post" action="{% url 'send_message' %}">
+                {% csrf_token %}
+                <label for="receiver">Select Receiver:</label>
+                <select name="receiver_id" id="receiver" required>
+                    <option value="">-- Select a User --</option>
+                    {% for user in users %}
+                        <option value="{{ user.user_id }}">{{ user.full_name }}</option>
+                    {% endfor %}
+                </select>
+                <br>
+                <textarea name="message_content" rows="4" cols="50" required></textarea><br>
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
         </div>
     </div>
 
@@ -394,6 +550,7 @@
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
         }
 
         // Show Manage Courses Section
@@ -405,11 +562,12 @@
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
         }
 
         function confirmDelete(courseId) {
             if (confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-                window.location.href = `/users/instructor/delete-course/${courseId}/`;
+                window.location.href = `/courses/instructor/delete-course/${courseId}/`;
             }
         }
         window.onload = function() {
@@ -425,6 +583,12 @@
             else if (getQueryParam("show_student_approvals") === "true") {
                 showManageStudentApprovals();
             }
+            else if(getQueryParam("show_home") === "true"){
+                showSqlAssistant();
+            }
+            else if(getQueryParam("show_messages") === "true"){
+                showMessages();
+            }
         };
         function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
@@ -438,6 +602,7 @@
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
         }
 
         function showManageAssignments() {
@@ -448,11 +613,12 @@
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
         }
 
         function confirmDeleteAssignment(assignmentId) {
             if (confirm("Are you sure you want to delete this assignment?")) {
-                window.location.href = `/users/instructor/delete-assignment/${assignmentId}/`;
+                window.location.href = `/assignments/instructor/delete-assignment/${assignmentId}/`;
             }
         }
 
@@ -465,6 +631,7 @@
             document.getElementById("assignmentFormContainer").classList.add("hidden");
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
         }
 
         // Show Manage Questions Section
@@ -476,15 +643,25 @@
             document.getElementById("assignmentFormContainer").classList.add("hidden");
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
         }
 
         function confirmDeleteQuestion(questionId) {
             if (confirm("Are you sure you want to delete this question?")) {
-                window.location.href = `/users/instructor/delete-question/${questionId}/`;
+                window.location.href = `/questions/instructor/delete-question/${questionId}/`;
             }
         }
+        function showSqlAssistant() {
+            document.getElementById("sqlAssistantContainer").classList.remove("hidden");
+            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("courseFormContainer").classList.add("hidden");
+            document.getElementById("manageCoursesContainer").classList.add("hidden");
+            document.getElementById("assignmentFormContainer").classList.add("hidden");
+            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
+            document.getElementById("questionFormContainer").classList.add("hidden");
+            document.getElementById("manageQuestionsContainer").classList.add("hidden");
+        }
         function showManageStudentApprovals() {
-            console.log("showForm function triggered"); // Debugging line
             document.getElementById("manageStudentApprovalsContainer").classList.remove("hidden");
             document.getElementById("courseFormContainer").classList.add("hidden");
             document.getElementById("manageCoursesContainer").classList.add("hidden");
@@ -492,6 +669,18 @@
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
+        }
+        function showMessages(){
+            document.getElementById("messagesContainer").classList.remove("hidden");
+            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("courseFormContainer").classList.add("hidden");
+            document.getElementById("manageCoursesContainer").classList.add("hidden");
+            document.getElementById("assignmentFormContainer").classList.add("hidden");
+            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
+            document.getElementById("questionFormContainer").classList.add("hidden");
+            document.getElementById("manageQuestionsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
         }
         function openQuestionModal() {
             // Reset any previous selections
@@ -598,6 +787,24 @@
                 option.style.display = (matchesSearch && matchesDifficulty && matchesAccess) ? "" : "none";
             });
         }
+        document.addEventListener("DOMContentLoaded", function () {
+            const startDateInput = document.querySelector("input[name='course_start_date']");
+            const endDateInput = document.querySelector("input[name='course_end_date']");
+            const deadlineInput = document.querySelector("input[name='deadline']");
+        
+            // Disable past dates for the Start Date field
+            const today = new Date().toISOString().split("T")[0];
+            startDateInput.setAttribute("min", today);
+            deadlineInput.setAttribute("min", today);
+        
+            // When Start Date is selected, set the min attribute for End Date
+            startDateInput.addEventListener("change", function () {
+                endDateInput.value = ""; // Clear previous end date if any
+                endDateInput.setAttribute("min", this.value);
+            });
+
+            
+        });
     </script>
 
 </body>

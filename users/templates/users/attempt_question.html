@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center text-primary">{{ question.question_title }}</h2>
+    <p class="text-muted">{{ question.description }}</p>
+
+    <form id="queryForm">
+        <div class="mb-3">
+            <label for="sqlQuery" class="form-label fw-bold">Write your SQL query:</label>
+            <textarea id="sqlQuery" class="form-control" rows="5" placeholder="Write your SQL query here..."></textarea>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="submitQuery()">Submit</button>
+    </form>
+
+    <div class="mt-4">
+        <h5 class="text-success">Feedback:</h5>
+        <p id="queryFeedback" class="text-muted">Your feedback will appear here.</p>
+    </div>
+</div>
+
+<script>
+    function submitQuery() {
+        let sqlQuery = document.getElementById("sqlQuery").value;
+        let questionId = "{{ question.question_id }}";
+
+        fetch("{% url 'evaluate_query' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ "question_id": questionId, "query": sqlQuery })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("queryFeedback").textContent = data.feedback;
+        })
+        .catch(error => console.error("Error:", error));
+    }
+</script>
+{% endblock %}
