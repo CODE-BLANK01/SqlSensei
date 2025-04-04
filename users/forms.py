@@ -50,22 +50,22 @@ class LoginForm(forms.Form):
     username = forms.EmailField(label="username", widget=forms.EmailInput(attrs={"autofocus": True}))
     password = forms.CharField(widget=forms.PasswordInput)
 
-class CourseForm(forms.ModelForm):
-    class Meta:
-        model = Course
-        fields = ["course_title", "course_description", "course_token", "course_start_date", "course_end_date", "enrollment_status"]
-        widgets = {
-            "course_start_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "course_end_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "enrollment_status": forms.Select(choices=[(True, "Open"), (False, "Closed")], attrs={"class": "form-control"})
-        }
+# class CourseForm(forms.ModelForm): Akshay
+#     class Meta:
+#         model = Course
+#         fields = ["course_title", "course_description", "course_token", "course_start_date", "course_end_date", "enrollment_status"]
+#         widgets = {
+#             "course_start_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+#             "course_end_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+#             "enrollment_status": forms.Select(choices=[(True, "Open"), (False, "Closed")], attrs={"class": "form-control"})
+#         }
 
-class AssignmentForm(forms.ModelForm):
-    class Meta:
-        model = Assignment
-        fields = ['assignment_title', 'description', 'deadline']
+# class AssignmentForm(forms.ModelForm): Akshay
+#     class Meta:
+#         model = Assignment
+#         fields = ['assignment_title', 'description', 'deadline']
 
-class QuestionForm(forms.ModelForm):
-    class Meta:
-        model = Question
-        fields = ['question_title', 'topic', 'difficulty_level', 'description', 'access_type']
+# class QuestionForm(forms.ModelForm): Akshay
+#     class Meta:
+#         model = Question
+#         fields = ['question_title', 'topic', 'difficulty_level', 'description', 'access_type']

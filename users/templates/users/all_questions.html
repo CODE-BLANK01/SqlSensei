@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4 text-primary">All Questions</h2>
+
+    <!-- Filters -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="difficultyFilter" class="fw-bold">Difficulty:</label>
+            <select id="difficultyFilter" class="form-select w-50 d-inline-block" onchange="filterQuestions()">
+                <option value="">All</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Questions Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover border shadow">
+            <thead class="table-dark">
+                <tr>
+                    <th>Question Title</th>
+                    <th>Topic</th>
+                    <th>Difficulty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for question in questions %}
+                <tr data-difficulty="{{ question.difficulty_level }}" data-access="{{ question.access_type }}"
+                onclick="location.href='{% url 'attempt_question' question.question_id %}'" style="cursor: pointer;">
+                    <td>{{ question.question_title }}</td>
+                    <td>{{ question.topic }}</td>
+                    <td>{{ question.difficulty_level }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterQuestions() {
+        let difficulty = document.getElementById("difficultyFilter").value;
+        let rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach(row => {
+            let rowDifficulty = row.getAttribute("data-difficulty");
+            
+            let showRow = 
+                (difficulty === "" || rowDifficulty === difficulty)            
+            row.style.display = showRow ? "" : "none";
+        });
+    }
+</script>
+{% endblock %}
