@@ -4,10 +4,7 @@ from django.db import connection
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
 from users.models import User
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.decorators import login_required
 
 # Load environment variables (make sure .env contains OPENAI_API_KEY)
 load_dotenv()
@@ -15,6 +12,7 @@ load_dotenv()
 # Initialize OpenAI client with API key
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Queries INFORMATION_SCHEMA to fetch current database schema details
 def get_database_schema():
     """
     Fetches the database schema (table names, column names, and data types).
@@ -38,9 +36,9 @@ def get_database_schema():
     )
     return schema_text
 
+# Handles user-submitted natural language queries, translates them using OpenAI, and executes safe SQL queries on the database
+@login_required(login_url='/users/login/')
 def sql_query_view(request):
-    if "user_id" not in request.session:
-        return redirect("login")
     user_id = request.session.get("user_id")
     user = User.objects.get(user_id = user_id)
     user_role = user.role.lower()

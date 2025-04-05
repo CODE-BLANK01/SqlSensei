@@ -9,7 +9,9 @@ from chat.models import Message
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef
+from django.contrib.auth.decorators import login_required
 
+# Registers a new user by saving to the User table
 def register_view(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -20,7 +22,7 @@ def register_view(request):
         form = RegisterForm()
     return render(request, "users/register.html", {"form": form})
 
-
+# Authenticates user by querying the User table and checking credentials
 def login_view(request):
     if request.method == "POST":
         form = LoginForm(data=request.POST)
@@ -49,14 +51,14 @@ def login_view(request):
         form = LoginForm()
     return render(request, "users/login.html", {"form": form})
 
-
+# Logs the user out of the current session
 def logout_view(request):
     logout(request)
     return redirect("login")
 
+# Loads instructor-specific data from multiple models for dashboard rendering
+@login_required(login_url='/users/login/')  # Redirects to login if user is not authenticated
 def instructor_dashboard(request):
-    if "user_id" not in request.session:
-        return redirect("login")
 
     user_id = request.session.get("user_id")
     instructor = User.objects.get(user_id=user_id)
@@ -73,6 +75,7 @@ def instructor_dashboard(request):
     results = request.session.get("results", [])
     error = request.session.get("error", "")
     submissions = AssignmentSubmission.objects.filter(review_status="Not Graded")
+    leaderboard_data = request.session.get('leaderboard_data', [])
 
     request.session.pop("query", None)
     request.session.pop("sql_query", None)
@@ -104,12 +107,14 @@ def instructor_dashboard(request):
         "error": error,
         "users": users,
         "messages": messages,
-        "submissions":submissions
+        "submissions":submissions,
+        "leaderboard": leaderboard_data,
     })
 
+# Loads student-specific data from multiple models for dashboard rendering
+@login_required(login_url='/users/login/')
 def student_dashboard(request):
-    if "user_id" not in request.session:
-        return redirect("login")
+
     user_id = request.session.get("user_id")
     student = User.objects.get(user_id = user_id)
     enrolled_courses = CourseEnrollment.objects.filter(student_id=student).values_list('course_id', flat=True)
@@ -119,6 +124,8 @@ def student_dashboard(request):
     results = request.session.get("results", [])
     error = request.session.get("error", "")
     leaderboard_data = request.session.get('leaderboard_data', [])
+    # Subquery to find course IDs where the current student has an 'Approved' enrollment.
+    # This is used with OuterRef to later filter the Course table for only those approved enrollments.
     approved_course_ids = CourseEnrollment.objects.filter(
     student_id=student,
     enrollment_status='Approved',
@@ -135,7 +142,7 @@ def student_dashboard(request):
     request.session.pop("errmessagesor", None)
     messages = Message.objects.filter(receiver=request.user).order_by('-message_date')
     users = User.objects.exclude(user_id=user_id) 
-    # Exclude those courses from the available list
+    # Exclude those courses from the available list which are already requested enrollment
     available_courses = Course.objects.exclude(course_id__in=enrolled_courses).filter(enrollment_status=True)
     return render(request, "users/student_dashboard.html", {
         "courses": available_courses, 
@@ -151,6 +158,8 @@ def student_dashboard(request):
         "approved_courses":approved_courses
     })
 
+# Returns list of questions for a given assignment
+@login_required(login_url='/users/login/')
 def get_assignment_questions(request, assignment_id):
     # Fetch the questions for the given assignment
     assignment_questions = AssignmentQuestion.objects.filter(assignment_id=assignment_id)
@@ -158,9 +167,9 @@ def get_assignment_questions(request, assignment_id):
     
     return JsonResponse({'questions': questions})
 
+# Handles message creation and stores it in the database
+@login_required(login_url='/users/login/')
 def send_message(request):
-    if "user_id" not in request.session:
-        return redirect("login")
     user_id = request.session.get("user_id")
     user = User.objects.get(user_id = user_id)
     user_role = user.role.lower()

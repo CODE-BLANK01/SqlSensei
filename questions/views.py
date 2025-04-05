@@ -4,16 +4,16 @@ from django.urls import reverse
 from .forms import QuestionForm
 from users.models import User
 from .models import Question, QuestionAttempt
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 import openai, os
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils.timezone import now
+from django.contrib.auth.decorators import login_required
 
-# Create your views here.
+# Handles form submission and saves a new question authored by the instructor to the database
+@login_required(login_url='/users/login/')
 def create_question(request):
-    if "user_id" not in request.session:
-        return redirect('/login/')
 
     if request.method == "POST":
         form = QuestionForm(request.POST)
@@ -31,31 +31,31 @@ def create_question(request):
 
     return render(request, "create_question.html", {"form": form})
 
+# Deletes a question entry from the database using the provided question_id from GUI
+@login_required(login_url='/users/login/')
 def delete_question(request, question_id):
-    if "user_id" not in request.session:
-        return redirect('/login/')
+    
     question = Question.objects.filter(question_id=question_id)
     question.delete()
     messages.success(request, "Qurstion deleted successfully.")
     return redirect(reverse('instructor_dashboard') + '?show_manage_questions=true')
 
+# Retrieves a specific question from the database that was selected from GUI to display for student attempt
+@login_required(login_url='/users/login/')
 def attempt_question(request, question_id):
-    if "user_id" not in request.session:
-        return redirect("login")
 
     question = get_object_or_404(Question, question_id=question_id)
     return render(request, "users/attempt_question.html", {"question": question})
 
+# Fetches all public questions from the database to show on the all-questions page
+@login_required(login_url='/users/login/')
 def all_questions(request):
-    if "user_id" not in request.session:
-        return redirect("login")
 
     questions = Question.objects.filter(access_type="Public")
 
     return render(request, "users/all_questions.html", {"questions": questions})
 
-
-
+# Evaluates a student's query using OpenAI against the questions description and stores feedback and attempt details in the database
 @csrf_exempt
 def evaluate_query(request):
     print("Received request at /users/evaluate_query/")  # Debugging step 1

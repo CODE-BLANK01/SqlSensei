@@ -136,6 +136,9 @@
         <!-- Student Approvals -->
         <a href="{% url 'student_approvals' %}" class="ps-3" onclick="showManageStudentApprovals()">✅ Student Approvals</a>
 
+        <!-- Leaderborad -->
+        <a href="{% url 'view_leaderboard' %}" class="ps-3">🏆 Leaderboard</a>
+
         <a href="#" onclick="showMessages()" class="ps-3">✉️ Messages</a>
 
         <!-- Logout -->
@@ -332,6 +335,32 @@
             </div>
         </div>
         
+        <!-- Leaderboard Section (Hidden Initially) -->
+        <div id="leaderboardContainer" class="hidden">
+            <h3>Leaderboard</h3>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Student ID</th>
+                        <th>Problems Solved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in leaderboard %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ entry.student_name }}</td>
+                        <td>{{ entry.problems_solved }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">No leaderboard data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <!-- Question Creation Form (Hidden Initially) -->
         <div id="questionFormContainer" class="hidden">
@@ -452,6 +481,9 @@
 
             <div id="chatBox">
                 <!-- Bot messages will appear here -->
+                {% if error %}
+                <p class="error">Error: {{ error }}</p>
+                {% endif %} 
                 {% if sql_query %}
                     <div class="chat-message bot">
                         <p>Generated SQL: {{ sql_query }}</p>
@@ -551,6 +583,7 @@
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
 
         // Show Manage Courses Section
@@ -563,6 +596,7 @@
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
 
         function confirmDelete(courseId) {
@@ -589,6 +623,9 @@
             else if(getQueryParam("show_messages") === "true"){
                 showMessages();
             }
+            else if(getQueryParam("show_leaderboard") === "true"){
+                showLeaderboard();
+            }
         };
         function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
@@ -603,6 +640,7 @@
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
 
         function showManageAssignments() {
@@ -614,6 +652,7 @@
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
 
         function confirmDeleteAssignment(assignmentId) {
@@ -632,6 +671,7 @@
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
 
         // Show Manage Questions Section
@@ -644,6 +684,7 @@
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
 
         function confirmDeleteQuestion(questionId) {
@@ -660,6 +701,7 @@
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
         function showManageStudentApprovals() {
             document.getElementById("manageStudentApprovalsContainer").classList.remove("hidden");
@@ -670,6 +712,7 @@
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
         function showMessages(){
             document.getElementById("messagesContainer").classList.remove("hidden");
@@ -681,7 +724,22 @@
             document.getElementById("questionFormContainer").classList.add("hidden");
             document.getElementById("manageQuestionsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
         }
+
+        function showLeaderboard() {
+            document.getElementById("leaderboardContainer").classList.remove("hidden");
+            document.getElementById("messagesContainer").classList.add("hidden");
+            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
+            document.getElementById("courseFormContainer").classList.add("hidden");
+            document.getElementById("manageCoursesContainer").classList.add("hidden");
+            document.getElementById("assignmentFormContainer").classList.add("hidden");
+            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
+            document.getElementById("questionFormContainer").classList.add("hidden");
+            document.getElementById("manageQuestionsContainer").classList.add("hidden");
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
+        }
+
         function openQuestionModal() {
             // Reset any previous selections
             console.log("showForm function triggered"); // Debugging line

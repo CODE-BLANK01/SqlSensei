@@ -34,8 +34,15 @@
     <header>
         <h1>Welcome to SqlSensei</h1>
         <nav>
+            {% if request.user.role == "Student" %}
             <a href="{% url 'student_dashboard' %}?show_home=true">Dashboard</a>
+            {% elif request.user.role == "Instructor" %}
+                <a href="{% url 'instructor_dashboard' %}?show_home=true">Dashboard</a>
+            {% else %}
+                <a href="#">Dashboard</a>
+            {% endif %}
             <a href="{% url 'logout' %}">Logout</a>
+            
         </nav>
     </header>
 

@@ -33,6 +33,9 @@
                 <tr>
                     <th>Assignment</th>
                     <th>Questions</th>
+                    <th>Grade</th>
+                    <th>Grade Status</th>
+                    <th>Submission Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -47,16 +50,22 @@
                     <td>
                         <form method="POST" enctype="multipart/form-data" action="{% url 'submit_assignment' data.assignment.assignment_id %}">
                             {% csrf_token %}
-                            <!-- Attach file input -->
-                            <input type="file" id="zipFile-{{ data.assignment.assignment_id }}" name="zipFile" accept=".zip" required>
-                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <input type="file" id="zipFile-{{ data.assignment.assignment_id }}" name="zipFile" accept=".zip"
+                                   {% if data.review_status == "Graded" %}disabled{% endif %} required>
+                            <button type="submit" class="btn btn-primary"
+                                    {% if data.review_status == "Graded" %}disabled{% endif %}>
+                                Submit
+                            </button>
                         </form>
                     </td>
+                    <td>{{ data.grade }}</td>
+                    <td>{{ data.review_status }}</td>
+                    <td>{{ data.submission_status }}</td>
                 </tr>
                 
                 <!-- Questions Row (Collapsible) -->
                 <tr>
-                    <td colspan="4">
+                    <td colspan="6">
                         <div id="questions-{{ data.assignment.assignment_id }}" class="collapse">
                             {% if data.questionsAssignment %}
                                 <ul class="list-group">

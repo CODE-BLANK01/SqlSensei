@@ -10,15 +10,14 @@ from .models import Assignment, AssignmentSubmission
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, FileResponse
 import os
+from django.contrib.auth.decorators import login_required
 
-# Create your views here.
+# Creates a new assignment in the database and links selected questions to it
+@login_required(login_url='/users/login/')
 def create_assignment(request):
-    if "user_id" not in request.session:
-        return redirect("login")
 
     if request.method == "POST":
         form = AssignmentForm(request.POST)
-        print(request.POST)  # Debugging: Check form data
         selected_questions = request.POST.get("questions", "").split(",")  # Get selected question IDs
         if form.is_valid():
             assignment = form.save(commit=False)
@@ -28,13 +27,10 @@ def create_assignment(request):
             assignment.course = course
             assignment.instructor = instructor
             assignment.save()
-            print(f"selected_questions: {selected_questions}")  # Print errors if form is invalid
-            # Insert records into Assignment_Questions table
-            for question_id in selected_questions:
+            for question_id in selected_questions: # Insert records into Assignment_Questions table
                 if question_id.strip():  # Ensure it's not empty
                     question = get_object_or_404(Question, question_id=int(question_id))
                     AssignmentQuestion.objects.create(assignment=assignment, question=question)
-
 
             messages.success(request, "Assignment created successfully.")
             return redirect(reverse("instructor_dashboard") + "?show_manage_assignments=true")
@@ -47,19 +43,19 @@ def create_assignment(request):
         "show_manage_courses": True
     })
 
+# Deletes the specified user selected assignment record from the database
+@login_required(login_url='/users/login/')
 def delete_assignment(request, assignment_id):
-    if "user_id" not in request.session:
-        return redirect("login")
 
     assignment = get_object_or_404(Assignment, assignment_id=assignment_id)
     assignment.delete()
     messages.success(request, "Assignment deleted successfully.")
     return redirect(reverse("instructor_dashboard") + '?show_manage_assignments=true')
 
+# Saves a student's assignment submission (file) to the database
+@login_required(login_url='/users/login/')
 def submit_assignment(request, assignment_id):
-    # Get the current student from request
-    if "user_id" not in request.session:
-        return redirect("login")
+    
     user_id = request.session.get("user_id")
     student = User.objects.get(user_id = user_id)
     
@@ -75,9 +71,9 @@ def submit_assignment(request, assignment_id):
         submission = AssignmentSubmission(
             assignment=assignment,
             student=student,
-            submitted_answer=zip_file,  # Storing the uploaded file
-            submission_status='Submitted',  # Status will be Pending initially
-            review_status='Not Graded'  # Set as Not Graded initially
+            submitted_answer=zip_file,
+            submission_status='Submitted',
+            review_status='Not Graded'
         )
         submission.save()
         course_id = assignment.course.course_id
@@ -87,6 +83,8 @@ def submit_assignment(request, assignment_id):
 
     return HttpResponse("Invalid request", status=400)
 
+# Updates the grade and review status of a student's assignment submission in the database
+@login_required(login_url='/users/login/')
 def grade_assignment(request):
     # Fetch all submissions that are 'Not Graded'
     submissions = AssignmentSubmission.objects.filter(review_status="Not Graded")
@@ -108,15 +106,14 @@ def grade_assignment(request):
 
     return render(request, 'users/grade_assignment.html', {"submissions": submissions})
 
+# Fetches and returns the submitted assignment file from the server for download
+@login_required(login_url='/users/login/')
 def download_submission(request, submission_id):
     submission = get_object_or_404(AssignmentSubmission, submission_id=submission_id)
 
-    print("Type of submitted_answer:", type(submission.submitted_answer))  # Debugging
-    print("Value of submitted_answer:", submission.submitted_answer)
     if not submission.submitted_answer:
         return HttpResponse("File not found", status=404)
 
-    # Ensure we get the actual file path
     file_path = submission.submitted_answer.path  # This should work if using FileField properly
 
     if not os.path.exists(file_path):
