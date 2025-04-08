@@ -5,99 +5,771 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instructor Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        :root {
+            /* Primary colors */
+            --primary-color: #3a5998;     /* Muted Facebook blue instead of bright blue */
+            --secondary-color: #2d4373;   /* Darker shade for secondary */
+            --accent-color: #4d76bf;      /* Slightly lighter accent blue */
+            
+            /* UI colors */
+            --light-color: #f8f9fc;       /* Kept the same light background */
+            --dark-color: #293145;        /* Deeper navy blue */
+            
+            /* Status colors */
+            --success-color: #36b37e;     /* Softer green */
+            --warning-color: #e9af43;     /* Softer amber/yellow */
+            --danger-color: #d73a49;      /* Less saturated red */
+            --info-color: #3c9cd2;        /* Softer blue */
+            
+            /* Text colors - kept as is since they're already good */
+            --text-light: #f8f9fa;
+            --text-dark: #1e293b;
+        }
+
         body {
             display: flex;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: var(--text-dark);
+            overflow-x: hidden;
         }
+
+        /* Sidebar styling */
         .sidebar {
-            width: 250px;
+            width: 280px;
             height: 100vh;
-            background: #343a40;
-            padding: 20px;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            padding: 20px 0;
             position: fixed;
-            color: white;
+            color: var(--text-light);
+            box-shadow: var(--shadow);
+            z-index: 100;
+            transition: var(--transition);
         }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h4 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-bottom: 0;
+        }
+
         .sidebar a {
-            color: white;
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             display: block;
-            padding: 10px;
+            padding: 12px 20px;
             margin: 5px 0;
-            border-radius: 5px;
+            border-radius: 0;
+            transition: var(--transition);
+            font-weight: 500;
+            position: relative;
         }
+
         .sidebar a:hover, .sidebar .active {
-            background: #495057;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transform: translateX(5px);
         }
-        .content {
-            margin-left: 260px;
-            padding: 20px;
+
+        .sidebar a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
             width: 100%;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        .sidebar .dropdown-arrow {
+            float: right;
+            margin-top: 4px;
+            transition: transform 0.3s;
+        }
+
+        .sidebar .show-dropdown .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown menu in sidebar */
+        .collapse {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar .collapse a {
+            padding-left: 50px;
+            font-size: 0.9rem;
+        }
+
+        .sidebar .collapse a:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Content area */
+        .content {
+            margin-left: 280px;
+            padding: 30px;
+            width: calc(100% - 280px);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .welcome-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-header h2 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .date-display {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        /* Card styling */
+        .custom-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .custom-card:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Table styling */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .custom-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .custom-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #1e293b;
+        }
+
+        .custom-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .custom-table tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Button styling */
+        .btn-custom {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger-custom {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger-custom:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        /* Badge styling */
+        .badge-custom {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #065f46;
+        }
+
+        .badge-pending {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #92400e;
+        }
+
+        /* Form styling */
+        .form-control-custom {
+            padding: 12px;
+            border-radius: var(--border-radius);
+            border: 1px solid #e5e7eb;
+            width: 100%;
+            transition: var(--transition);
+            margin-bottom: 1rem;
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+            outline: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        /* Chat container styling */
+        #sqlAssistantContainer {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 0;
+            height: 80vh;
+            max-width: 100%;
+            margin: auto;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        #chatBox {
+            background-color: #f8fafc;
+            padding: 20px;
+            height: calc(80vh - 170px);
+            overflow-y: auto;
+            margin-bottom: 0;
+        }
+
+        .chat-message {
+            margin-bottom: 20px;
+            display: flex;
+        }
+
+        .chat-message.bot {
+            justify-content: flex-start;
+        }
+
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+
+        .chat-message p {
+            padding: 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin: 0;
+        }
+
+        .chat-message.bot p {
+            background-color: white;
+            color: var(--text-dark);
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-message.user p {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background-color: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+
+        #query {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: 1px solid #e5e7eb;
+            margin-right: 10px;
+        }
+
+        #query:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            outline: none;
+        }
+
+        #submitBtn {
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        #submitBtn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Modal styling */
+        .modal-content {
+            border-radius: var(--border-radius);
+            border: none;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom: none;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #e5e7eb;
+            padding: 15px 20px;
+        }
+
+        /* Question list styling */
+        #questionList {
+            height: 250px;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--border-radius);
+            padding: 10px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                overflow: hidden;
+                padding: 20px 0;
+            }
+            
+            .sidebar-header h4, .sidebar a span {
+                display: none;
+            }
+            
+            .sidebar a {
+                text-align: center;
+                padding: 15px;
+            }
+            
+            .sidebar a i {
+                margin-right: 0;
+                font-size: 1.2rem;
+            }
+            
+            .content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+            }
+            
+            .sidebar-footer {
+                display: none;
+            }
+            
+            .sidebar .collapse a {
+                padding-left: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+            
+            .welcome-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+            
+            .date-display {
+                margin-top: 10px;
+            }
+        }
+
+        /* Animation for loading */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Messages count indicator */
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 15px;
+            background-color: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Status indicators */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-open {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #065f46;
+        }
+        
+        .status-closed {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #991b1b;
+        }
+        
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #92400e;
+        }
+
+        /* Hidden class */
         .hidden {
             display: none;
         }
-        /* Chat Assistant Styles */
-        #sqlAssistantContainer {
-            background-color: #f8f9fa;
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
             border-radius: 10px;
-            padding: 20px;
-            height: 80vh;
-            max-width: 800px;
-            margin: auto;
         }
-        #chatBox {
-            background-color: white;
-            border-radius: 10px;
-            padding: 10px;
-            height: 60vh;
-            overflow-y: scroll;
-            margin-bottom: 20px;
-            max-height: 500px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
-        .chat-message {
-            margin-bottom: 15px;
+
+        /* Table action buttons */
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+            transition: var(--transition);
         }
-        .chat-message.bot {
-            text-align: left;
+        
+        .action-btn-view {
+            background-color: var(--accent-color);
         }
-        .chat-message.user {
-            text-align: right;
+        
+        .action-btn-view:hover {
+            background-color: #4f46e5;
+            color: white;
         }
-        .chat-message p {
-            padding: 10px;
-            border-radius: 10px;
+        
+        .action-btn-edit {
+            background-color: var(--warning-color);
+        }
+        
+        .action-btn-edit:hover {
+            background-color: #d97706;
+            color: white;
+        }
+        
+        .action-btn-delete {
+            background-color: var(--danger-color);
+        }
+        
+        .action-btn-delete:hover {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .action-btn-approve {
+            background-color: var(--success-color);
+        }
+        
+        .action-btn-approve:hover {
+            background-color: #059669;
+            color: white;
+        }
+
+        .action-btn-deny {
+            background-color: var(--danger-color);
+        }
+        
+        .action-btn-deny:hover {
+            background-color: #dc2626;
+            color: white;
+        }
+        
+        /* Difficulty level badges */
+        .difficulty-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
             display: inline-block;
         }
-        .chat-message.bot p {
-            background-color: #e9ecef;
-            max-width: 75%;
+        
+        .difficulty-easy {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #065f46;
         }
-        .chat-message.user p {
-            background-color: #007bff;
-            color: white;
-            max-width: 75%;
+        
+        .difficulty-medium {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #92400e;
         }
-        #query {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+        
+        .difficulty-hard {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #991b1b;
         }
-        #submitBtn {
-            margin-top: 10px;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
+
+        /* Access type badges */
+        .access-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .access-public {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #1e40af;
+        }
+        
+        .access-private {
+            background-color: rgba(107, 114, 128, 0.2);
+            color: #374151;
+        }
+
+        /* Assignment row styling */
+        .assignment-row {
             cursor: pointer;
         }
-        #submitBtn:hover {
-            background-color: #0056b3;
+        
+        .assignment-row:hover td {
+            background-color: #f1f5f9;
+        }
+        
+        .questions-row td {
+            background-color: #f8fafc;
+            padding: 0;
+        }
+        
+        .questions-row ul {
+            padding: 15px 20px;
+            margin: 0;
+        }
+        
+        .questions-row li {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Filter controls */
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .filter-group label {
+            margin-right: 10px;
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            min-width: 120px;
+        }
+        
+        .search-input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            flex-grow: 1;
+        }
+
+        /* Statistics cards */
+        .stats-card {
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            background-color: white;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .stats-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .stats-icon.courses {
+            background-color: rgba(79, 70, 229, 0.2);
+            color: var(--primary-color);
+        }
+        
+        .stats-icon.students {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+        
+        .stats-icon.assignments {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+        
+        .stats-icon.questions {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .stats-info h4 {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .stats-info p {
+            color: #6b7280;
+            margin: 5px 0 0 0;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -105,477 +777,1010 @@
 
     <!-- Sidebar Navigation -->
     <div class="sidebar">
-        <h4 class="text-center">Instructor Dashboard</h4>
-        <hr>
+        <div class="sidebar-header">
+            <h4><i class="fas fa-chalkboard-teacher"></i> Instructor Portal</h4>
+        </div>
 
-        <!-- Home -->
-        <a class="ps-3" href="#" onclick="showSqlAssistant(event)">🏠 Home</a>
+        <!-- Navigation Links -->
+        <a href="#" onclick="showSqlAssistant()" class="active">
+            <i class="fas fa-home"></i> <span>Dashboard</span>
+        </a>
 
-        <!-- Course Management -->
-        <a data-bs-toggle="collapse" href="#courseMenu" role="button">📚 Course Management</a>
+        <a data-bs-toggle="collapse" href="#courseMenu" role="button">
+            <i class="fas fa-book"></i> <span>Course Management</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </a>
         <div class="collapse" id="courseMenu">
-            <a href="#" class="ps-3" onclick="showForm()">➕ Create Course</a>
-            <a id = "manageCoursesBtn" href="#" class="ps-3" onclick="showManageCourses()">📌 Manage Courses</a>
+            <a href="#" onclick="showForm()">
+                <i class="fas fa-plus-circle"></i> <span>Create Course</span>
+            </a>
+            <a href="{% url 'view_course' %}" onclick="showManageCourses()">
+                <i class="fas fa-cogs"></i> <span>Manage Courses</span>
+            </a>
         </div>
 
-        <!-- Assignments Management -->
-        <a data-bs-toggle="collapse" href="#assignmentMenu" role="button">📂 Assignments</a>
+        <a data-bs-toggle="collapse" href="#assignmentMenu" role="button">
+            <i class="fas fa-tasks"></i> <span>Assignments</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </a>
         <div class="collapse" id="assignmentMenu">
-            <a href="#" class="ps-3" onclick="showAssignmentForm()">➕ Create Assignment</a>
-            <a href="#" class="ps-3" onclick="showManageAssignments()">📌 Manage Assignments</a>
-            <a href="{% url 'grade_assignment' %}" class="ps-3">✅ Grade Assignments</a>
+            <a href="#" onclick="showAssignmentForm()">
+                <i class="fas fa-plus-circle"></i> <span>Create Assignment</span>
+            </a>
+            <a href="{% url 'view_assignments' %}" onclick="showManageAssignments()">
+                <i class="fas fa-cogs"></i> <span>Manage Assignments</span>
+            </a>
+            <a href="{% url 'grade_assignment' %}">
+                <i class="fas fa-check-circle"></i> <span>Grade Assignments</span>
+            </a>
         </div>
 
-         <!-- Question Bank -->
-         <a data-bs-toggle="collapse" href="#questionMenu" role="button">📝 Question Bank</a>
-         <div class="collapse" id="questionMenu">
-             <a href="#" class="ps-3" onclick="showQuestionForm()">➕ Create Question</a>
-             <a href="#" class="ps-3" onclick="showManageQuestions()">📖 View Questions</a>
-         </div>
+        <a data-bs-toggle="collapse" href="#questionMenu" role="button">
+            <i class="fas fa-question-circle"></i> <span>Question Bank</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </a>
+        <div class="collapse" id="questionMenu">
+            <a href="#" onclick="showQuestionForm()">
+                <i class="fas fa-plus-circle"></i> <span>Create Question</span>
+            </a>
+            <a href="{% url 'view_instructor_questions' %}" onclick="showManageQuestions()">
+                <i class="fas fa-list"></i> <span>View Questions</span>
+            </a>
+        </div>
 
-        <!-- Student Approvals -->
-        <a href="{% url 'student_approvals' %}" class="ps-3" onclick="showManageStudentApprovals()">✅ Student Approvals</a>
+        <a href="{% url 'student_approvals' %}" onclick="showManageStudentApprovals()">
+            <i class="fas fa-user-check"></i> <span>Student Approvals</span>
+            {% if pending_enrollments|length > 0 %}
+            <span class="notification-badge">{{ pending_enrollments|length }}</span>
+            {% endif %}
+        </a>
 
-        <!-- Leaderborad -->
-        <a href="{% url 'view_leaderboard' %}" class="ps-3">🏆 Leaderboard</a>
+        <a href="{% url 'view_leaderboard' %}" onclick="showLeaderboard()">
+            <i class="fas fa-trophy"></i> <span>Leaderboard</span>
+        </a>
 
-        <a href="#" onclick="showMessages()" class="ps-3">✉️ Messages</a>
+        <a href="#" onclick="showMessages()">
+            <i class="fas fa-envelope"></i> <span>Messages</span>
+            {% if messages|length > 0 %}
+            <span class="notification-badge">{{ messages|length }}</span>
+            {% endif %}
+        </a>
 
-        <!-- Logout -->
-        <hr>
-        <a href="{% url 'logout' %}" class="text-danger">🚪 Logout</a>
+        <div class="sidebar-footer">
+            <a href="{% url 'logout' %}" class="text-danger">
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </a>
+        </div>
     </div>
 
     <!-- Main Content -->
     <div class="content">
-        <h2>Welcome, {{user_name}}</h2>
-        <p>Select an option from the sidebar to manage courses, questions, and student approvals.</p>
+        <div class="welcome-header">
+            <h2><i class="fas fa-user-circle"></i> Welcome, {{user_name}}</h2>
+            <div class="date-display">
+                <i class="far fa-calendar-alt"></i> <span id="current-date">April 6, 2025</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Summary -->
+        <div id="dashboardSummary">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon courses">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>{{ courses|length }}</h4>
+                            <p>Active Courses</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon students">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>{{ pending_enrollments|length }}</h4>
+                            <p>Pending Approvals</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon assignments">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>{{ assignments|length }}</h4>
+                            <p>Active Assignments</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon questions">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>{{ questions|length }}</h4>
+                            <p>Questions Created</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Course Creation Form (Hidden Initially) -->
-        <div id="courseFormContainer" class="hidden">
-            <h3>Create a Course</h3>
-            <form method="post" action="{% url 'create_course' %}">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label">Course Title</label>
-                    <input type="text" name="course_title" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Course Description</label>
-                    <textarea name="course_description" class="form-control"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Course Token</label>
-                    <input type="text" name="course_token" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Start Date</label>
-                    <input type="date" name="course_start_date" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">End Date</label>
-                    <input type="date" name="course_end_date" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Enrollment Status</label>
-                    <select name="enrollment_status" class="form-control">
-                        <option value="1">Open</option>
-                        <option value="0">Closed</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">Create Course</button>
-            </form>
-        </div>
-        
-    
-
-        <!-- Manage Courses Section (Hidden Initially) -->
-        <div id="manageCoursesContainer" class="hidden {% if show_manage_courses %}show{% endif %}">
-            <h3>Manage Courses</h3>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Course Title</th>
-                        <th>Description</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for course in courses %}
-                    <tr>
-                        <td>{{ course.course_title }}</td>
-                        <td>{{ course.course_description }}</td>
-                        <td>{{ course.course_start_date }}</td>
-                        <td>{{ course.course_end_date }}</td>
-                        <td>
-                            <a href="#">Edit</a> | 
-                            <a href="#" onclick="confirmDelete({{ course.course_id }})" class="text-danger">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div id="assignmentFormContainer" class="hidden">
-            <h3>Create an Assignment</h3>
-            <form method="post" action="{% url 'create_assignment' %}">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label">Course</label>
-                    <select name="course_id" class="form-control" required>
-                        {% for course in courses %}
-                            <option value="{{ course.course_id }}">{{ course.course_title }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Questions</label>
-                    <input type="text" class="form-control" id="selectedQuestions" readonly placeholder="Select questions" onclick="openQuestionModal()">
-                    <input type="hidden" name="questions" id="questionsInput">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Assignment Title</label>
-                    <input type="text" name="assignment_title" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Deadline</label>
-                    <input type="date" name="deadline" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Create Assignment</button>
-            </form>
-        </div>
-        
-        <!-- Manage Assignments Section (Hidden Initially) -->
-        <div id="manageAssignmentsContainer" class="hidden {% if show_manage_assignments %}show{% endif %}">
-            <h3>Manage Assignments</h3>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Assignment Title</th>
-                        <th>Course</th>
-                        <th>Deadline</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for assignment_data in assignments %}
-                    <tr class="assignment-row" data-assignment-id="{{ assignment_data.assignment.assignment_id }}">
-                        <td>{{ assignment_data.assignment.assignment_title }}</td>
-                        <td>{{ assignment_data.assignment.course.course_title }}</td>
-                        <td>{{ assignment_data.assignment.deadline }}</td>
-                        <td>
-                            <a href="#">Edit</a> | 
-                            <a href="#" onclick="confirmDeleteAssignment({{ assignment_data.assignment.assignment_id }})" class="text-danger">Delete</a>
-                        </td>
-                    </tr>
-                    <tr class="questions-row" id="questions-{{ assignment_data.assignment.assignment_id }}" style="display: none;">
-                        <td colspan="4">
-                            <ul></ul> <!-- The questions will be added here dynamically -->
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                
-            </table>
-        </div>
-
-        <div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="questionModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="questionModalLabel">Select Questions</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Filters -->
-                        <div class="mb-3">
-                            <input type="text" id="searchQuestion" class="form-control" placeholder="Search questions..." onkeyup="filterQuestionsInModal()">
+        <div id="courseFormContainer" class="hidden custom-card">
+            <div class="card-header">
+                <h3><i class="fas fa-plus-circle"></i> Create a New Course</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'create_course' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="course_title" class="form-label">
+                                    <i class="fas fa-heading"></i> Course Title
+                                </label>
+                                <input type="text" name="course_title" id="course_title" class="form-control-custom" required>
+                                <div class="invalid-feedback">Please enter a course title.</div>
+                            </div>
                         </div>
-                        <div class="mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="course_token" class="form-label">
+                                    <i class="fas fa-key"></i> Course Token
+                                </label>
+                                <input type="text" name="course_token" id="course_token" class="form-control-custom" required>
+                                <div class="invalid-feedback">Please enter a course token.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="course_description" class="form-label">
+                            <i class="fas fa-align-left"></i> Course Description
+                        </label>
+                        <textarea name="course_description" id="course_description" class="form-control-custom" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="course_start_date" class="form-label">
+                                    <i class="fas fa-calendar-day"></i> Start Date
+                                </label>
+                                <input type="date" name="course_start_date" id="course_start_date" class="form-control-custom">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="course_end_date" class="form-label">
+                                    <i class="fas fa-calendar-check"></i> End Date
+                                </label>
+                                <input type="date" name="course_end_date" id="course_end_date" class="form-control-custom">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="enrollment_status" class="form-label">
+                                    <i class="fas fa-user-plus"></i> Enrollment Status
+                                </label>
+                                <select name="enrollment_status" id="enrollment_status" class="form-control-custom">
+                                    <option value="1">Open</option>
+                                    <option value="0">Closed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" class="btn btn-custom btn-secondary me-2" onclick="hideAllContainers(); showSqlAssistant();">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-custom btn-primary-custom">
+                            <i class="fas fa-save"></i> Create Course
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Manage Courses Section -->
+        <div id="manageCoursesContainer">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3><i class="fas fa-cogs"></i> Manage Courses</h3>
+                <button class="btn btn-custom btn-primary-custom" onclick="showForm()">
+                    <i class="fas fa-plus"></i> Add New Course
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="loading-spinner" id="loadingSpinner-manageCourses">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th width="25%">Course Title</th>
+                            <th width="35%">Description</th>
+                            <th width="12%">Start Date</th>
+                            <th width="12%">End Date</th>
+                            <th width="16%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>
+                                <strong>{{ course.course_title }}</strong>
+                                <div class="text-muted small">Token: {{ course.course_token }}</div>
+                            </td>
+                            <td>{{ course.course_description }}</td>
+                            <td>{{ course.course_start_date }}</td>
+                            <td>{{ course.course_end_date }}</td>
+                            <td>
+                                <a href="#" onclick="confirmDelete({{ course.course_id }})" class="action-btn action-btn-delete">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-book fa-2x mb-3"></i>
+                                    <p>No courses found. Create your first course to get started.</p>
+                                    <button class="btn btn-custom btn-primary-custom mt-2" onclick="showForm()">
+                                        <i class="fas fa-plus"></i> Create Course
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Assignment Creation Form -->
+        <div id="assignmentFormContainer" class="hidden custom-card">
+            <div class="card-header">
+                <h3><i class="fas fa-plus-circle"></i> Create a New Assignment</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'create_assignment' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="course_id" class="form-label">
+                                    <i class="fas fa-book"></i> Select Course
+                                </label>
+                                <select name="course_id" id="course_id" class="form-control-custom" required>
+                                    <option value="">-- Select a course --</option>
+                                    {% for course in courses %}
+                                        <option value="{{ course.course_id }}">{{ course.course_title }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a course.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="assignment_title" class="form-label">
+                                    <i class="fas fa-heading"></i> Assignment Title
+                                </label>
+                                <input type="text" name="assignment_title" id="assignment_title" class="form-control-custom" required>
+                                <div class="invalid-feedback">Please enter an assignment title.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="selectedQuestions" class="form-label">
+                            <i class="fas fa-question-circle"></i> Select Questions
+                        </label>
+                        <input type="text" class="form-control-custom" id="selectedQuestions" readonly placeholder="Click to select questions" onclick="openQuestionModal()">
+                        <input type="hidden" name="questions" id="questionsInput">
+                        <div class="text-muted small mt-1">Click the field to open question selection.</div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        <textarea name="description" id="description" class="form-control-custom" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="deadline" class="form-label">
+                            <i class="fas fa-hourglass-end"></i> Deadline
+                        </label>
+                        <input type="date" name="deadline" id="deadline" class="form-control-custom" required>
+                        <div class="invalid-feedback">Please set a deadline.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" class="btn btn-custom btn-secondary me-2" onclick="hideAllContainers(); showSqlAssistant();">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-custom btn-primary-custom">
+                            <i class="fas fa-save"></i> Create Assignment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Manage Assignments Section -->
+        <div id="manageAssignmentsContainer">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3><i class="fas fa-tasks"></i> Manage Assignments</h3>
+                <button class="btn btn-custom btn-primary-custom" onclick="showAssignmentForm()">
+                    <i class="fas fa-plus"></i> Add New Assignment
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="loading-spinner" id="loadingSpinner-manageAssignments">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th width="30%">Assignment Title</th>
+                            <th width="30%">Course</th>
+                            <th width="20%">Deadline</th>
+                            <th width="20%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment_data in assignments %}
+                        <tr class="assignment-row" data-assignment-id="{{ assignment_data.assignment.assignment_id }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-clipboard-list text-primary me-2"></i>
+                                    <div>
+                                        <strong>{{ assignment_data.assignment.assignment_title }}</strong>
+                                        <div class="text-muted small">Click to view questions</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ assignment_data.assignment.course_title }}</td>
+                            <td>
+                                {% if assignment_data.assignment.deadline|date:"Y-m-d" < "2025-04-06"|date:"Y-m-d" %}
+                                    <span class="status-badge status-closed">
+                                        <i class="fas fa-clock"></i> Expired on {{ assignment_data.assignment.deadline }}
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge status-open">
+                                        <i class="fas fa-clock"></i> Due on {{ assignment_data.assignment.deadline }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="#" class="action-btn action-btn-view">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="#" onclick="confirmDeleteAssignment({{ assignment_data.assignment.assignment_id }})" class="action-btn action-btn-delete">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        <tr class="questions-row" id="questions-{{ assignment_data.assignment.assignment_id }}" style="display: none;">
+                            <td colspan="4">
+                                <ul></ul> <!-- The questions will be added here dynamically -->
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-tasks fa-2x mb-3"></i>
+                                    <p>No assignments found. Create your first assignment to get started.</p>
+                                    <button class="btn btn-custom btn-primary-custom mt-2" onclick="showAssignmentForm()">
+                                        <i class="fas fa-plus"></i> Create Assignment
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Question Creation Form -->
+        <div id="questionFormContainer" class="hidden custom-card">
+            <div class="card-header">
+                <h3><i class="fas fa-plus-circle"></i> Create a New Question</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'create_question' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="question_title" class="form-label">
+                                    <i class="fas fa-heading"></i> Question Title
+                                </label>
+                                <input type="text" name="question_title" id="question_title" class="form-control-custom" required>
+                                <div class="invalid-feedback">Please enter a question title.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="topic" class="form-label">
+                                    <i class="fas fa-tag"></i> Topic
+                                </label>
+                                <input type="text" name="topic" id="topic" class="form-control-custom">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="difficulty_level" class="form-label">
+                                    <i class="fas fa-level-up-alt"></i> Difficulty Level
+                                </label>
+                                <select name="difficulty_level" id="difficulty_level" class="form-control-custom">
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Hard">Hard</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="access_type" class="form-label">
+                                    <i class="fas fa-lock"></i> Access Type
+                                </label>
+                                <select name="access_type" id="access_type" class="form-control-custom">
+                                    <option value="Public">Public</option>
+                                    <option value="Private">Private</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        <textarea name="description" id="description" class="form-control-custom" rows="6"></textarea>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="schema_sql" class="form-label">
+                            <i class="fas fa-table"></i> Schema SQL
+                            <small class="text-muted">(SQL to create the necessary tables)</small>
+                        </label>
+                        <div class="editor-container">
+                            <textarea name="schema_sql" id="schema_sql" class="form-control-custom code-editor" rows="6"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="sample_data_sql" class="form-label">
+                            <i class="fas fa-database"></i> Sample Data SQL
+                            <small class="text-muted">(SQL to insert sample data into tables)</small>
+                        </label>
+                        <div class="editor-container">
+                            <textarea name="sample_data_sql" id="sample_data_sql" class="form-control-custom code-editor" rows="6"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="expected_output" class="form-label">
+                            <i class="fas fa-check-circle"></i> Expected Output
+                            <small class="text-muted">(Description or example of what the solution should return)</small>
+                        </label>
+                        <textarea name="expected_output" id="expected_output" class="form-control-custom" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" class="btn btn-custom btn-secondary me-2" onclick="hideAllContainers(); showSqlAssistant();">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-custom btn-primary-custom">
+                            <i class="fas fa-save"></i> Create Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Manage Questions Section -->
+        <div id="manageQuestionsContainer">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3><i class="fas fa-question-circle"></i> Manage Questions</h3>
+                <button class="btn btn-custom btn-primary-custom" onclick="showQuestionForm()">
+                    <i class="fas fa-plus"></i> Add New Question
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="loading-spinner" id="loadingSpinner-manageQuestions">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="difficultyFilter"><i class="fas fa-filter"></i> Difficulty:</label>
+                        <select id="difficultyFilter" class="filter-select" onchange="filterQuestions()">
+                            <option value="">All</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="accessTypeFilter"><i class="fas fa-lock"></i> Access Type:</label>
+                        <select id="accessTypeFilter" class="filter-select" onchange="filterQuestions()">
+                            <option value="">All</option>
+                            <option value="Public">Public</option>
+                            <option value="Private">Private</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group flex-grow-1">
+                        <input type="text" id="searchQuestionField" class="search-input" placeholder="Search questions..." onkeyup="filterQuestions()">
+                    </div>
+                </div>
+                
+                <table class="custom-table" id="questionsTable">
+                    <thead>
+                        <tr>
+                            <th width="30%">Question Title</th>
+                            <th width="20%">Topic</th>
+                            <th width="15%">Difficulty</th>
+                            <th width="15%">Access Type</th>
+                            <th width="20%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question in questions %}
+                        <tr data-difficulty="{{ question.difficulty_level }}" data-access="{{ question.access_type }}">
+                            <td>{{ question.question_title }}</td>
+                            <td>{{ question.topic }}</td>
+                            <td>
+                                {% if question.difficulty_level == "Easy" %}
+                                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                                {% elif question.difficulty_level == "Medium" %}
+                                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                                {% else %}
+                                    <span class="difficulty-badge difficulty-hard">Hard</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if question.access_type == "Public" %}
+                                    <span class="access-badge access-public">Public</span>
+                                {% else %}
+                                    <span class="access-badge access-private">Private</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="#" onclick="confirmDeleteQuestion({{ question.question_id }})" class="action-btn action-btn-delete">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-question-circle fa-2x mb-3"></i>
+                                    <p>No questions found. Create your first question to get started.</p>
+                                    <button class="btn btn-custom btn-primary-custom mt-2" onclick="showQuestionForm()">
+                                        <i class="fas fa-plus"></i> Create Question
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Student Approvals Section -->
+        <div id="manageStudentApprovalsContainer" class="hidden {% if show_student_approvals %}show{% endif %} custom-card">
+            <div class="card-header">
+                <h3><i class="fas fa-user-check"></i> Student Enrollment Approvals</h3>
+            </div>
+            <div class="card-body">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th width="25%">Student</th>
+                            <th width="30%">Course</th>
+                            <th width="20%">Enrollment Date</th>
+                            <th width="25%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in pending_enrollments %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3" style="width: 35px; height: 35px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ enrollment.student_id.full_name }}</strong>
+                                        <div class="text-muted small">{{ enrollment.student_id.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ enrollment.course_id.course_title }}</td>
+                            <td>{{ enrollment.enrollment_date }}</td>
+                            <td>
+                                <a href="{% url 'approve_student' enrollment.enrollment_id %}" class="action-btn action-btn-approve">
+                                    <i class="fas fa-check"></i> Approve
+                                </a>
+                                <a href="{% url 'deny_student' enrollment.enrollment_id %}" class="action-btn action-btn-deny">
+                                    <i class="fas fa-times"></i> Deny
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-user-check fa-2x mb-3"></i>
+                                    <p>No pending student enrollments at this time.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Leaderboard Section -->
+        <div id="leaderboardContainer" class="hidden custom-card">
+            <div class="card-header">
+                <h3><i class="fas fa-trophy"></i> Leaderboard</h3>
+            </div>
+            <div class="card-body">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th width="10%">Rank</th>
+                            <th width="60%">Student</th>
+                            <th width="30%">Problems Solved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in leaderboard %}
+                        <tr>
+                            <td>
+                                {% if forloop.counter == 1 %}
+                                <span class="badge rounded-pill bg-warning text-dark"><i class="fas fa-crown"></i> #{{ forloop.counter }}</span>
+                                {% elif forloop.counter == 2 %}
+                                <span class="badge rounded-pill bg-secondary"><i class="fas fa-medal"></i> #{{ forloop.counter }}</span>
+                                {% elif forloop.counter == 3 %}
+                                <span class="badge rounded-pill" style="background-color: #cd7f32; color: white;"><i class="fas fa-medal"></i> #{{ forloop.counter }}</span>
+                                {% else %}
+                                <span class="badge rounded-pill bg-light text-dark">#{{ forloop.counter }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3" style="width: 40px; height: 40px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ entry.student_name }}</strong>
+                                        <div class="text-muted small">Student ID: {{ entry.student_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2" style="font-size: 1.2rem; font-weight: bold;">{{ entry.problems_solved }}</div>
+                                    <div class="progress flex-grow-1" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                            style="width: {{ entry.problems_solved }}%;" 
+                                            aria-valuenow="{{ entry.problems_solved }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-chart-bar fa-2x mb-3"></i>
+                                    <p>No leaderboard data available yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SQL Query Assistant Section -->
+        <div id="sqlAssistantContainer" class="hidden custom-card">
+            <div class="chat-header">
+                <h3><i class="fas fa-robot"></i> SQL Query Assistant</h3>
+            </div>
+
+            <div id="chatBox">
+                <!-- Welcome message -->
+                <div class="chat-message bot">
+                    <p>
+                        <strong>Hello, {{user_name}}! 👋</strong><br>
+                        I'm your SQL Assistant. Ask me any question about your data, and I'll help you generate the right SQL query.
+                    </p>
+                </div>
+                
+                <!-- Error messages if any -->
+                {% if error %}
+                <div class="chat-message bot">
+                    <p class="text-danger">
+                        <i class="fas fa-exclamation-circle"></i> Error: {{ error }}
+                    </p>
+                </div>
+                {% endif %} 
+                
+                <!-- SQL query if generated -->
+                {% if sql_query %}
+                <div class="chat-message bot">
+                    <p>
+                        <strong>Generated SQL:</strong><br>
+                        <code>{{ sql_query }}</code>
+                    </p>
+                </div>
+                {% endif %}
+                
+                <!-- Results if any -->
+                {% if results %}
+                <div class="chat-message bot">
+                    <p>
+                        <strong>Results:</strong><br>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        {% for col in columns %}
+                                        <th>{{ col }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in results %}
+                                    <tr>
+                                        {% for cell in row %}
+                                        <td>{{ cell }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </p>
+                </div>
+                {% endif %}
+                
+                <!-- User's previous query if any -->
+                {% if query %}
+                <div class="chat-message user">
+                    <p>{{ query }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Input form for new queries -->
+            <div class="chat-input-container">
+                <form method="post" action="{% url 'sql_query' %}" class="d-flex w-100">
+                    {% csrf_token %}
+                    <input type="text" name="query" id="query" placeholder="Ask your SQL query here..." required />
+                    <button type="submit" id="submitBtn">
+                        <i class="fas fa-paper-plane me-1"></i> Send
+                    </button>
+                </form>
+            </div>
+        </div>
+    
+        <!-- Messages Section -->
+        <div id="messagesContainer" class="hidden">
+            <div class="row">
+                <!-- Inbox table -->
+                <div class="col-lg-7">
+                    <div class="custom-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3><i class="fas fa-envelope"></i> Inbox</h3>
+                            <span class="badge bg-primary rounded-pill">{{ messages|length }} messages</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for message in messages %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ message.sender.full_name }}</h5>
+                                        <small class="text-muted">{{ message.message_date }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ message.message_content }}</p>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Your inbox is empty.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Send Message Form -->
+                <div class="col-lg-5">
+                    <div class="custom-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-paper-plane"></i> Send a Message</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'send_message' %}" class="needs-validation" novalidate>
+                                {% csrf_token %}
+                                <div class="form-group mb-3">
+                                    <label for="receiver" class="form-label">
+                                        <i class="fas fa-user"></i> Recipient
+                                    </label>
+                                    <select name="receiver_id" id="receiver" class="form-control-custom" required>
+                                        <option value="">-- Select a recipient --</option>
+                                        {% for user in users %}
+                                            <option value="{{ user.user_id }}">{{ user.full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a recipient.
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="message_content" class="form-label">
+                                        <i class="fas fa-comment-alt"></i> Message
+                                    </label>
+                                    <textarea 
+                                        name="message_content" 
+                                        id="message_content" 
+                                        rows="5" 
+                                        class="form-control-custom" 
+                                        placeholder="Type your message here..." 
+                                        required
+                                    ></textarea>
+                                    <div class="invalid-feedback">
+                                        Please enter a message.
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-custom btn-primary-custom w-100">
+                                    <i class="fas fa-paper-plane me-2"></i> Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Contacts -->
+                    <div class="custom-card mt-4">
+                        <div class="card-header">
+                            <h3><i class="fas fa-address-book"></i> Quick Contacts</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                {% for user in users|slice:":5" %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3" style="width: 35px; height: 35px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ user.full_name }}</strong>
+                                            <div class="text-muted small">{{ user.role }}</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="selectRecipient('{{ user.user_id }}')">
+                                        <i class="fas fa-comment"></i>
+                                    </button>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-center py-3">
+                                    <span class="text-muted">No contacts available</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Selection Modal -->
+    <div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="questionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="questionModalLabel">Select Questions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Filters -->
+                    <div class="filter-controls mb-3">
+                        <div class="filter-group flex-grow-1">
+                            <label for="searchQuestion" class="visually-hidden">Search</label>
+                            <input type="text" id="searchQuestion" class="search-input" placeholder="Search questions..." onkeyup="filterQuestionsInModal()">
+                        </div>
+                        <div class="filter-group">
                             <label for="modalDifficultyFilter">Difficulty:</label>
-                            <select id="modalDifficultyFilter" class="form-control" onchange="filterQuestionsInModal()">
+                            <select id="modalDifficultyFilter" class="filter-select" onchange="filterQuestionsInModal()">
                                 <option value="">All</option>
                                 <option value="Easy">Easy</option>
                                 <option value="Medium">Medium</option>
                                 <option value="Hard">Hard</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="modalAccessTypeFilter">Access Type:</label>
-                            <select id="modalAccessTypeFilter" class="form-control" onchange="filterQuestionsInModal()">
+                        <div class="filter-group">
+                            <label for="modalAccessTypeFilter">Access:</label>
+                            <select id="modalAccessTypeFilter" class="filter-select" onchange="filterQuestionsInModal()">
                                 <option value="">All</option>
                                 <option value="Public">Public</option>
                                 <option value="Private">Private</option>
                             </select>
                         </div>
+                    </div>
         
-                        <!-- Question List -->
-                        <select id="questionList" class="form-control" multiple>
-                            {% for question in allQuestions %}
-                                <option value="{{ question.question_id }}" 
-                                        data-difficulty="{{ question.difficulty_level }}" 
-                                        data-access="{{ question.access_type }}">
-                                    {{ question.question_title }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="selectQuestions()">Select</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Leaderboard Section (Hidden Initially) -->
-        <div id="leaderboardContainer" class="hidden">
-            <h3>Leaderboard</h3>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Student ID</th>
-                        <th>Problems Solved</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for entry in leaderboard %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ entry.student_name }}</td>
-                        <td>{{ entry.problems_solved }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3">No leaderboard data available.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Question Creation Form (Hidden Initially) -->
-        <div id="questionFormContainer" class="hidden">
-            <h3>Create a Question</h3>
-            <form method="post" action="{% url 'create_question' %}">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label">Question Title</label>
-                    <input type="text" name="question_title" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Topic</label>
-                    <input type="text" name="topic" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Difficulty Level</label>
-                    <select name="difficulty_level" class="form-control">
-                        <option value="Easy">Easy</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Hard">Hard</option>
+                    <!-- Question List -->
+                    <select id="questionList" class="form-control-custom" multiple size="12">
+                        {% for question in allQuestions %}
+                            <option value="{{ question.question_id }}" 
+                                    data-difficulty="{{ question.difficulty_level }}" 
+                                    data-access="{{ question.access_type }}">
+                                {{ question.question_title }}
+                            </option>
+                        {% endfor %}
                     </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Access Type</label>
-                    <select name="access_type" class="form-control">
-                        <option value="Public">Public</option>
-                        <option value="Private">Private</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">Create Question</button>
-            </form>
-        </div>
-
-        <!-- Manage Questions Section (Hidden Initially) -->
-        <div id="manageQuestionsContainer" class="hidden {% if show_manage_questions %}show{% endif %}">
-            <h3>Manage Questions</h3>
-            <!-- Filters -->
-            <div style="margin-bottom: 15px;">
-                <label for="difficultyFilter">Difficulty:</label>
-                <select id="difficultyFilter" onchange="filterQuestions()">
-                    <option value="">All</option>
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                </select>
-
-                <label for="accessTypeFilter">Access Type:</label>
-                <select id="accessTypeFilter" onchange="filterQuestions()">
-                    <option value="">All</option>
-                    <option value="Public">Public</option>
-                    <option value="Private">Private</option>
-                </select>
-            </div>
-            <table class="table table-bordered" id="questionsTable">
-                <thead>
-                    <tr>
-                        <th>Question Title</th>
-                        <th>Topic</th>
-                        <th>Difficulty</th>
-                        <th>Access Type</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for question in questions %}
-                    <tr data-difficulty="{{ question.difficulty_level }}" data-access="{{ question.access_type }}">
-                        <td>{{ question.question_title }}</td>
-                        <td>{{ question.topic }}</td>
-                        <td>{{ question.difficulty_level }}</td>
-                        <td>{{ question.access_type }}</td>
-                        <td>
-                            <a href="#">Edit</a> | 
-                            <a href="#" onclick="confirmDeleteQuestion({{ question.question_id }})" class="text-danger">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div id="manageStudentApprovalsContainer" class="hidden {% if show_student_approvals %}show{% endif %}">
-            <h3>Student Enrollment Approvals</h3>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Course Name</th>
-                        <th>Enrollment Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for enrollment in pending_enrollments %}
-                    <tr>
-                        <td>{{ enrollment.student_id.full_name }}</td>
-                        <td>{{ enrollment.course_id.course_title }}</td>
-                        <td>{{ enrollment.enrollment_date }}</td>
-                        <td>
-                            <a href="{% url 'approve_student' enrollment.enrollment_id %}">Approve</a> | 
-                            <a href="{% url 'deny_student' enrollment.enrollment_id %}">Deny</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4">No pending student enrollments.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div id="sqlAssistantContainer" class="hidden">
-            <h1>SQL Query Assistant</h1>
-
-            <div id="chatBox">
-                <!-- Bot messages will appear here -->
-                {% if error %}
-                <p class="error">Error: {{ error }}</p>
-                {% endif %} 
-                {% if sql_query %}
-                    <div class="chat-message bot">
-                        <p>Generated SQL: {{ sql_query }}</p>
+                    <div class="text-muted small mt-2">
+                        <i class="fas fa-info-circle"></i> Hold Ctrl (or Cmd on Mac) to select multiple questions.
                     </div>
-                {% endif %}
-                {% if results %}
-                    <div class="chat-message bot">
-                        <p>Results:</p>
-                        <table>
-                            <thead>
-                                <tr>
-                                    {% for col in columns %}
-                                    <th>{{ col }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in results %}
-                                <tr>
-                                    {% for cell in row %}
-                                    <td>{{ cell }}</td>
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="selectQuestions()">
+                        <i class="fas fa-check"></i> Select Questions
+                    </button>
+                </div>
             </div>
-
-            <!-- User's input message -->
-            <div class="chat-message user">
-                <p>{{ query }}</p>
-            </div>
-
-            <!-- Input form for new queries -->
-            <form method="post" action="{% url 'sql_query' %}">
-                {% csrf_token %}
-                <input type="text" name="query" id="query" placeholder="Ask your query here..." required />
-                <button type="submit" id="submitBtn">Submit</button>
-            </form>
-        </div>
-            <!-- Inbox Messages Section -->
-        <div id="messagesContainer" class="hidden">
-            <h3>Inbox</h3>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Sender</th>
-                        <th>Message</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for message in messages %}
-                    <tr>
-                        <td>{{ message.sender.full_name }}</td>
-                        <td>{{ message.message_content }}</td>
-                        <td>{{ message.message_date }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3">No messages yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <h3>Send a Message</h3>
-            <form method="post" action="{% url 'send_message' %}">
-                {% csrf_token %}
-                <label for="receiver">Select Receiver:</label>
-                <select name="receiver_id" id="receiver" required>
-                    <option value="">-- Select a User --</option>
-                    {% for user in users %}
-                        <option value="{{ user.user_id }}">{{ user.full_name }}</option>
-                    {% endfor %}
-                </select>
-                <br>
-                <textarea name="message_content" rows="4" cols="50" required></textarea><br>
-                <button type="submit" class="btn btn-primary">Send</button>
-            </form>
         </div>
     </div>
 
-    <!-- Assignment Creation Form (Hidden Initially) -->
-
-
     <script>
-        // Show Course Creation Form
-        function showForm() {
-            document.getElementById("courseFormContainer").classList.remove("hidden");
+        // Set current date in header
+        document.addEventListener('DOMContentLoaded', function() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            document.getElementById('current-date').textContent = today.toLocaleDateString('en-US', options);
+            
+            // Initialize Bootstrap tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+        
+        function hideAllContainers() {
+            document.getElementById("dashboardSummary").classList.add("hidden");
+            document.getElementById("courseFormContainer").classList.add("hidden");
             document.getElementById("manageCoursesContainer").classList.add("hidden");
             document.getElementById("assignmentFormContainer").classList.add("hidden");
             document.getElementById("manageAssignmentsContainer").classList.add("hidden");
@@ -584,27 +1789,142 @@
             document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
             document.getElementById("sqlAssistantContainer").classList.add("hidden");
             document.getElementById("leaderboardContainer").classList.add("hidden");
+            document.getElementById("messagesContainer").classList.add("hidden");
+        }
+        
+        function showSqlAssistant() {
+            hideAllContainers();
+            document.getElementById("dashboardSummary").classList.remove("hidden");
+            document.getElementById("sqlAssistantContainer").classList.remove("hidden");
+            setActiveNavItem('home');
+        }
+
+        // Show Course Creation Form
+        function showForm() {
+            hideAllContainers();
+            document.getElementById("courseFormContainer").classList.remove("hidden");
+            setActiveNavItem('create-course');
         }
 
         // Show Manage Courses Section
         function showManageCourses() {
+            hideAllContainers();
             document.getElementById("manageCoursesContainer").classList.remove("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
+            showLoading('manageCourses');
+  
+            // Simulate data loading with a timeout (replace with your actual data loading)
+            setTimeout(function() {
+              hideLoading('manageCourses');
+            }, 1); // Show spinner for 1 second
+            setActiveNavItem('manage-courses');
         }
 
-        function confirmDelete(courseId) {
-            if (confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-                window.location.href = `/courses/instructor/delete-course/${courseId}/`;
-            }
+        function showAssignmentForm() {
+            hideAllContainers();
+            document.getElementById("assignmentFormContainer").classList.remove("hidden");
+            setActiveNavItem('create-assignment');
         }
+
+        function showManageAssignments() {
+            hideAllContainers();
+            document.getElementById("manageAssignmentsContainer").classList.remove("hidden");
+            showLoading('manageAssignments');
+  
+            // Simulate data loading with a timeout (replace with your actual data loading)
+            setTimeout(function() {
+              hideLoading('manageAssignments');
+            }, 1); // Show spinner for 1 second
+            setActiveNavItem('manage-assignments');
+        }
+
+        // Show Question Creation Form
+        function showQuestionForm() {
+            hideAllContainers();
+            document.getElementById("questionFormContainer").classList.remove("hidden");
+            setActiveNavItem('create-question');
+        }
+
+        // Show Manage Questions Section
+        function showManageQuestions() {
+            hideAllContainers();
+            document.getElementById("manageQuestionsContainer").classList.remove("hidden");
+            showLoading('manageQuestions');
+  
+            // Simulate data loading with a timeout (replace with your actual data loading)
+            setTimeout(function() {
+              hideLoading('manageQuestions');
+            }, 1); // Show spinner for 1 second
+            setActiveNavItem('manage-questions');
+        }
+        
+        function showManageStudentApprovals() {
+            hideAllContainers();
+            document.getElementById("manageStudentApprovalsContainer").classList.remove("hidden");
+            setActiveNavItem('student-approvals');
+        }
+        
+        function showMessages() {
+            hideAllContainers();
+            document.getElementById("messagesContainer").classList.remove("hidden");
+            setActiveNavItem('messages');
+        }
+
+        function showLeaderboard() {
+            hideAllContainers();
+            document.getElementById("leaderboardContainer").classList.remove("hidden");
+            setActiveNavItem('leaderboard');
+        }
+        
+        function confirmDelete(courseId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this deletion!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#4f46e5',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/courses/instructor/delete-course/${courseId}/`;
+                }
+            });
+        }
+        
+        function confirmDeleteAssignment(assignmentId) {
+            Swal.fire({
+                title: 'Delete Assignment?',
+                text: "This will remove the assignment and all associated submissions.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#4f46e5',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/assignments/instructor/delete-assignment/${assignmentId}/`;
+                }
+            });
+        }
+        
+        function confirmDeleteQuestion(questionId) {
+            Swal.fire({
+                title: 'Delete Question?',
+                text: "This question will be removed from all assignments that use it.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#4f46e5',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/questions/instructor/delete-question/${questionId}/`;
+                }
+            });
+        }
+        
         window.onload = function() {
+            // Initialize based on URL parameters
             if (getQueryParam("show_manage_courses") === "true") {
                 showManageCourses();
             }
@@ -626,124 +1946,25 @@
             else if(getQueryParam("show_leaderboard") === "true"){
                 showLeaderboard();
             }
+            else {
+                // Default view
+                showSqlAssistant();
+            }
+            
+            // Initialize date constraints
+            initializeDateConstraints();
+            document.querySelectorAll('.loading-spinner').forEach(spinner => {
+                spinner.style.display = 'none';
+            });
         };
+        
         function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
-        function showAssignmentForm() {
-            document.getElementById("assignmentFormContainer").classList.remove("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-        }
-
-        function showManageAssignments() {
-            document.getElementById("manageAssignmentsContainer").classList.remove("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-        }
-
-        function confirmDeleteAssignment(assignmentId) {
-            if (confirm("Are you sure you want to delete this assignment?")) {
-                window.location.href = `/assignments/instructor/delete-assignment/${assignmentId}/`;
-            }
-        }
-
-        // Show Question Creation Form
-        function showQuestionForm() {
-            document.getElementById("questionFormContainer").classList.remove("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-        }
-
-        // Show Manage Questions Section
-        function showManageQuestions() {
-            document.getElementById("manageQuestionsContainer").classList.remove("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-        }
-
-        function confirmDeleteQuestion(questionId) {
-            if (confirm("Are you sure you want to delete this question?")) {
-                window.location.href = `/questions/instructor/delete-question/${questionId}/`;
-            }
-        }
-        function showSqlAssistant() {
-            document.getElementById("sqlAssistantContainer").classList.remove("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-        }
-        function showManageStudentApprovals() {
-            document.getElementById("manageStudentApprovalsContainer").classList.remove("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-        }
-        function showMessages(){
-            document.getElementById("messagesContainer").classList.remove("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-        }
-
-        function showLeaderboard() {
-            document.getElementById("leaderboardContainer").classList.remove("hidden");
-            document.getElementById("messagesContainer").classList.add("hidden");
-            document.getElementById("manageStudentApprovalsContainer").classList.add("hidden");
-            document.getElementById("courseFormContainer").classList.add("hidden");
-            document.getElementById("manageCoursesContainer").classList.add("hidden");
-            document.getElementById("assignmentFormContainer").classList.add("hidden");
-            document.getElementById("manageAssignmentsContainer").classList.add("hidden");
-            document.getElementById("questionFormContainer").classList.add("hidden");
-            document.getElementById("manageQuestionsContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-        }
-
+        
         function openQuestionModal() {
             // Reset any previous selections
-            console.log("showForm function triggered"); // Debugging line
-            document.getElementById('questionList').value = "";
             $('#questionModal').modal('show');
         }
         
@@ -757,11 +1978,24 @@
             
             // Update the input field to display selected question titles
             const selectedTitles = Array.from(selectedOptions).map(option => option.text).join(', ');
-            document.getElementById('selectedQuestions').value = selectedTitles;
+            document.getElementById('selectedQuestions').value = selectedTitles || "No questions selected";
             
             // Close the modal
             $('#questionModal').modal('hide');
+            
+            // Show a success message
+            if (selectedValues.length > 0) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: `Selected ${selectedValues.length} question(s)`,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
         }
+        
         document.addEventListener('DOMContentLoaded', function() {
             const assignmentRows = document.querySelectorAll('.assignment-row');
         
@@ -774,25 +2008,33 @@
                     if (questionsRow.style.display === 'none' || questionsRow.style.display === '') {
                         // Check if the questions have already been loaded
                         if (!questionsRow.hasAttribute('data-loaded')) {
+                            // Show loading state
+                            const questionsList = questionsRow.querySelector('ul');
+                            questionsList.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading questions...</div>';
+                            questionsRow.style.display = 'table-row';
+                            
                             // Make an AJAX request to fetch the questions for the assignment
                             fetch(`/users/instructor/get-questions/${assignmentId}/`)
                                 .then(response => response.json())
                                 .then(data => {
-                                    const questionsList = questionsRow.querySelector('ul');
                                     questionsList.innerHTML = ''; // Clear any previous content
         
-                                    data.questions.forEach(question => {
-                                        const listItem = document.createElement('li');
-                                        listItem.textContent = question;
-                                        questionsList.appendChild(listItem);
-                                    });
+                                    if (data.questions.length === 0) {
+                                        questionsList.innerHTML = '<div class="text-center py-3 text-muted">No questions assigned.</div>';
+                                    } else {
+                                        data.questions.forEach(question => {
+                                            const listItem = document.createElement('li');
+                                            listItem.textContent = question;
+                                            questionsList.appendChild(listItem);
+                                        });
+                                    }
         
                                     // Mark the questions as loaded
                                     questionsRow.setAttribute('data-loaded', 'true');
-                                    questionsRow.style.display = 'table-row'; // Show the questions
                                 })
                                 .catch(error => {
                                     console.error('Error fetching questions:', error);
+                                    questionsList.innerHTML = '<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-circle"></i> Error loading questions. Please try again.</div>';
                                 });
                         } else {
                             questionsRow.style.display = 'table-row'; // Show the questions if already loaded
@@ -803,29 +2045,28 @@
                 });
             });
         });
+        
         function filterQuestions() {
-            
-            console.log("Filtering triggered!");
-            
             var difficulty = document.getElementById("difficultyFilter").value;
-            console.log(difficulty);
             var accessType = document.getElementById("accessTypeFilter").value;
-            console.log(accessType);
+            var searchText = document.getElementById("searchQuestionField") ? document.getElementById("searchQuestionField").value.toLowerCase() : '';
             var rows = document.querySelectorAll("#questionsTable tbody tr");
-            console.log(rows);
     
             rows.forEach(row => {
                 var rowDifficulty = row.getAttribute("data-difficulty");
-                console.log(rowDifficulty);
                 var rowAccess = row.getAttribute("data-access");
+                var questionTitle = row.cells[0].textContent.toLowerCase();
+                var topic = row.cells[1].textContent.toLowerCase();
+                
+                // Show row only if it matches filters
+                var matchesDifficulty = difficulty === "" || rowDifficulty === difficulty;
+                var matchesAccess = accessType === "" || rowAccess === accessType;
+                var matchesSearch = searchText === "" || questionTitle.includes(searchText) || topic.includes(searchText);
     
-                // Show row only if it matches both filters or if filters are not selected
-                var show = (difficulty === "" || rowDifficulty === difficulty) &&
-                           (accessType === "" || rowAccess === accessType);
-    
-                row.style.display = show ? "" : "none";
+                row.style.display = (matchesDifficulty && matchesAccess && matchesSearch) ? "" : "none";
             });
         }
+        
         function filterQuestionsInModal() {
             var searchText = document.getElementById("searchQuestion").value.toLowerCase();
             var difficulty = document.getElementById("modalDifficultyFilter").value;
@@ -845,23 +2086,118 @@
                 option.style.display = (matchesSearch && matchesDifficulty && matchesAccess) ? "" : "none";
             });
         }
-        document.addEventListener("DOMContentLoaded", function () {
+        
+        function initializeDateConstraints() {
             const startDateInput = document.querySelector("input[name='course_start_date']");
             const endDateInput = document.querySelector("input[name='course_end_date']");
             const deadlineInput = document.querySelector("input[name='deadline']");
-        
-            // Disable past dates for the Start Date field
+            
+            if (!startDateInput || !endDateInput) return;
+            
+            // Disable past dates for date fields
             const today = new Date().toISOString().split("T")[0];
-            startDateInput.setAttribute("min", today);
-            deadlineInput.setAttribute("min", today);
+            
+            if (startDateInput) startDateInput.setAttribute("min", today);
+            if (deadlineInput) deadlineInput.setAttribute("min", today);
         
             // When Start Date is selected, set the min attribute for End Date
             startDateInput.addEventListener("change", function () {
                 endDateInput.value = ""; // Clear previous end date if any
                 endDateInput.setAttribute("min", this.value);
             });
-
+        }
+        
+        function setActiveNavItem(id) {
+            // Reset all active states
+            document.querySelectorAll('.sidebar a').forEach(item => {
+                item.classList.remove('active');
+            });
             
+            // Set active based on id
+            switch(id) {
+                case 'home':
+                    document.querySelector('.sidebar a:nth-child(1)').classList.add('active');
+                    break;
+                case 'create-course':
+                    document.querySelector('#courseMenu a:nth-child(1)').classList.add('active');
+                    break;
+                case 'manage-courses':
+                    document.querySelector('#courseMenu a:nth-child(2)').classList.add('active');
+                    break;
+                case 'create-assignment':
+                    document.querySelector('#assignmentMenu a:nth-child(1)').classList.add('active');
+                    break;
+                case 'manage-assignments':
+                    document.querySelector('#assignmentMenu a:nth-child(2)').classList.add('active');
+                    break;
+                case 'create-question':
+                    document.querySelector('#questionMenu a:nth-child(1)').classList.add('active');
+                    break;
+                case 'manage-questions':
+                    document.querySelector('#questionMenu a:nth-child(2)').classList.add('active');
+                    break;
+                case 'student-approvals':
+                    document.querySelector('.sidebar a:nth-child(7)').classList.add('active');
+                    break;
+                case 'leaderboard':
+                    document.querySelector('.sidebar a:nth-child(8)').classList.add('active');
+                    break;
+                case 'messages':
+                    document.querySelector('.sidebar a:nth-child(9)').classList.add('active');
+                    break;
+            }
+        }
+        
+        function selectRecipient(userId) {
+            const selectElement = document.getElementById('receiver');
+            selectElement.value = userId;
+            
+            // Scroll to the message form and focus on text area
+            document.getElementById('message_content').focus();
+        }
+        
+        // Form validation
+        (function () {
+            'use strict'
+            
+            // Fetch all forms we want to apply validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+            
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+        function showLoading(containerId) {
+            document.getElementById('loadingSpinner-' + containerId).style.display = 'flex';
+            document.querySelector('#' + containerId + 'Container table').style.display = 'none';
+        }
+          
+        function hideLoading(containerId) {
+            document.getElementById('loadingSpinner-' + containerId).style.display = 'none';
+            document.querySelector('#' + containerId + 'Container table').style.display = 'table';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeAreas = document.querySelectorAll('.code-editor');
+            codeAreas.forEach(area => {
+                CodeMirror.fromTextArea(area, {
+                    mode: "text/x-sql",
+                    theme: "dracula",
+                    lineNumbers: true,
+                    indentWithTabs: true,
+                    smartIndent: true,
+                    lineWrapping: true,
+                    matchBrackets: true,
+                });
+            });
         });
     </script>
 

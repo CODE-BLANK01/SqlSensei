@@ -10,52 +10,105 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils.timezone import now
 from django.contrib.auth.decorators import login_required
+from django.db import connection
 
-# Handles form submission and saves a new question authored by the instructor to the database
+# Handles form submission and saves a new question authored by the instructor to the database. Uses Dynamic SQL
 @login_required(login_url='/users/login/')
 def create_question(request):
-
     if request.method == "POST":
-        form = QuestionForm(request.POST)
-
-        if form.is_valid():
-            question = form.save(commit=False)
-            user_id = request.session.get("user_id")
-            created_by = User.objects.get(user_id=user_id)
-            question.instructor = created_by  # Assign the creator
-            question.save()
-            messages.success(request, "Question created successfully.")
-            return redirect(reverse("instructor_dashboard") + "?show_manage_questions=true") 
+        question_title = request.POST.get("question_title")
+        topic = request.POST.get("topic")
+        difficulty_level = request.POST.get("difficulty_level")
+        description = request.POST.get("description")
+        access_type = request.POST.get("access_type")
+        
+        # New fields for LeetCode-like experience
+        schema_sql = request.POST.get("schema_sql")
+        sample_data_sql = request.POST.get("sample_data_sql")
+        expected_output = request.POST.get("expected_output")
+        
+        # Get user_id from session and fetch the instructor (creator)
+        user_id = request.session.get("user_id")
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT user_id
+                FROM Users
+                WHERE user_id = %s
+                """, [user_id])
+            created_by = cursor.fetchone()
+            if created_by:
+                # Insert into Question table with new fields
+                cursor.execute("""
+                    INSERT INTO Questions (
+                        question_title, topic, difficulty_level, description,
+                        schema_sql, sample_data_sql, expected_output, 
+                        access_type, instructor_id
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, [
+                        question_title, topic, difficulty_level, description,
+                        schema_sql, sample_data_sql, expected_output, 
+                        access_type, user_id
+                    ])
+                messages.success(request, "SQL Challenge created successfully.")
+                return redirect(reverse("view_instructor_questions") + "?show_manage_questions=true")
+            else:
+                messages.error(request, "Instructor not found.")
+                return redirect(reverse("view_instructor_questions") + "?show_manage_questions=true")
     else:
         form = QuestionForm()
 
-    return render(request, "create_question.html", {"form": form})
-
-# Deletes a question entry from the database using the provided question_id from GUI
+# Deletes a question entry from the database using the dynamically selected question_id from GUI. Uses Dynamic SQL
 @login_required(login_url='/users/login/')
 def delete_question(request, question_id):
-    
-    question = Question.objects.filter(question_id=question_id)
-    question.delete()
-    messages.success(request, "Qurstion deleted successfully.")
-    return redirect(reverse('instructor_dashboard') + '?show_manage_questions=true')
+    with connection.cursor() as cursor:
+        # Delete the question from the Question table based on the question_id
+        cursor.execute("""
+            DELETE FROM Questions 
+            WHERE question_id = %s
+        """, [question_id])
+        
+    messages.success(request, "Question deleted successfully.")
+    return redirect(reverse('view_instructor_questions') + '?show_manage_questions=true')
 
-# Retrieves a specific question from the database that was selected from GUI to display for student attempt
+
+# Retrieves a specific question from the database that was dynamically selected from GUI to display for student attempt
 @login_required(login_url='/users/login/')
 def attempt_question(request, question_id):
-
+    source = request.GET.get('source', '')
     question = get_object_or_404(Question, question_id=question_id)
-    return render(request, "users/attempt_question.html", {"question": question})
+    if source == 'assignment':
+        return render(request, "users/attempt_question_simplified.html", {"question": question})
+    else:
+        return render(request, "users/attempt_question.html", {"question": question})
 
-# Fetches all public questions from the database to show on the all-questions page
+# Fetches all public questions from the database to show on the all-questions page. Uses Dynamic SQL
 @login_required(login_url='/users/login/')
 def all_questions(request):
+    with connection.cursor() as cursor:
+        # Fetch all questions where access_type is 'Public'
+        cursor.execute("""
+            SELECT question_id, question_title, topic, difficulty_level, description, access_type
+            FROM Questions
+            WHERE access_type = %s
+        """, ['Public'])
 
-    questions = Question.objects.filter(access_type="Public")
+        rows = cursor.fetchall()
+
+        # Create a list of dictionaries for the questions
+        questions = [{
+            'question_id': row[0],
+            'question_title': row[1],
+            'topic': row[2],
+            'difficulty_level': row[3],
+            'description': row[4],
+            'access_type': row[5]
+        } for row in rows]
 
     return render(request, "users/all_questions.html", {"questions": questions})
 
-# Evaluates a student's query using OpenAI against the questions description and stores feedback and attempt details in the database
+
+# Evaluates a dynamically selected question with student's query using OpenAI against the questions description and stores feedback and attempt details in the database
 @csrf_exempt
 def evaluate_query(request):
     print("Received request at /users/evaluate_query/")  # Debugging step 1
@@ -130,3 +183,80 @@ def evaluate_query(request):
 
     print("Error: Invalid request method")  # Debugging step 11
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+# Displays a list of questions, filtered by difficulty level, access type based on dynamically selected query parameters.
+# Uses Dynamic SQL
+def question_list(request):
+    # Get query parameters for filtering
+    difficulty = request.GET.get('difficulty_level', None)
+    access_type = request.GET.get('access_type', None)
+
+    # Base query for fetching questions
+    query = """
+        SELECT question_id, question_title, topic, difficulty_level, description, access_type
+        FROM Question
+        WHERE 1=1
+    """
+    # List to hold parameters for the query
+    params = []
+
+    # Apply filters based on the query parameters if they exist
+    if difficulty:
+        query += " AND difficulty_level = %s"
+        params.append(difficulty)
+    
+    if access_type:
+        query += " AND access_type = %s"
+        params.append(access_type)
+
+    # Execute the query with the appropriate parameters
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+        # Create a list of dictionaries for the questions
+        questions = [{
+            'question_id': row[0],
+            'question_title': row[1],
+            'topic': row[2],
+            'difficulty_level': row[3],
+            'description': row[4],
+            'access_type': row[5]
+        } for row in rows]
+
+    # Pass the filtered questions to the template
+    return render(request, "users/all_questions.html", {"questions": questions})
+
+# Fetch the questions created by the logged in instructor user and display it to them. Uses Dynamic SQL
+@login_required(login_url='/users/login/')
+def view_instructor_questions(request):
+    user_id = request.session.get("user_id")
+   
+    # Fetch all courses data using raw SQL
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT question_id, question_title, topic, difficulty_level,
+                   description, instructor_id, created_date, access_type
+            FROM Questions
+            WHERE instructor_id = %s
+        """, [user_id])
+
+        rows = cursor.fetchall()
+
+        # Convert to list of dictionaries
+        questions = [{
+            'question_id': row[0],
+            'question_title': row[1],
+            'topic': row[2],
+            'difficulty_level': row[3],
+            'description': row[4],
+            'instructor_id': row[5],
+            'created_date': row[6].strftime('%Y-%m-%d %H:%M:%S') if row[6] else None,
+            'access_type': row[7]
+        } for row in rows]
+
+    # Save the courses data to session
+    request.session['questions'] = questions
+    
+    # Redirect to the appropriate dashboard with courses data
+    return redirect(reverse("instructor_dashboard") + '?show_manage_questions=true')

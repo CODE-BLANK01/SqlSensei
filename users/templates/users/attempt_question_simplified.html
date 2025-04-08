@@ -1,6 +1,4 @@
-{% extends "base.html" %}
 
-{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -278,24 +276,36 @@
         .table-preview tr:nth-child(even) {
             background-color: #f8f9fa;
         }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-btn:hover {
+            transform: scale(1.1);
+            background: #c0392b;
+        }
     </style>
 </head>
 <body>
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="container">
-            <h3><i class="fas fa-database me-2"></i>SQL Challenge</h3>
-            <p class="small">Solve database challenges with SQL queries</p>
-        </div>
-    </div>
-
-    <div class="container">
-        <!-- Navigation Links -->
-        <div class="d-flex justify-content-end mb-2">
-            <a href="{% url 'all_questions' %}" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-question-circle me-1"></i><span>Question Bank</span>
-            </a>
-        </div>
+    <div class="container mt-4 mb-4">
+        <!-- Close Button -->
+        <button class="close-btn" onclick="window.close()" title="Close window">
+            <i class="fas fa-times"></i>
+        </button>
         
         <!-- Question Card -->
         <div class="question-card">
@@ -351,8 +361,6 @@
                     <div class="mb-3">
                         <h5><i class="fas fa-table me-2"></i>Database Schema</h5>
                         <div class="code-block" id="schemaCodeBlock">{{ question.schema_sql }}</div>
-                        
-                        
                     </div>
                     {% else %}
                     <div class="alert alert-info">
@@ -364,8 +372,6 @@
                     <div class="mb-3">
                         <h5><i class="fas fa-database me-2"></i>Sample Data</h5>
                         <div class="code-block" id="sampleDataCodeBlock">{{ question.sample_data_sql }}</div>
-                        
-                        
                     </div>
                     {% endif %}
                 </div>
@@ -480,22 +486,6 @@
                     readOnly: true
                 });
             }
-            
-            // Generate schema visualization if schema exists
-            if (document.getElementById('schemaVisualization')) {
-                // This would normally parse the schema SQL and generate table visualizations
-                // For simplicity, we'll just show a placeholder
-                const tables = extractTablesFromSchema();
-                displaySchemaVisualization(tables);
-            }
-            
-            // Generate data visualization if sample data exists
-            if (document.getElementById('dataVisualization')) {
-                // This would normally parse the sample data SQL and generate data previews
-                // For simplicity, we'll just show a placeholder
-                const sampleData = extractSampleData();
-                displayDataVisualization(sampleData);
-            }
         });
         
         // Clear editor function
@@ -560,78 +550,6 @@
             const formText = document.querySelector('.form-text');
             formText.innerHTML += ' <span class="badge bg-secondary">Ctrl+Enter to run</span>';
         });
-        
-        
-        // Helper function to extract sample data (placeholder)
-        function extractSampleData() {
-            // In a real implementation, you'd parse the sample data SQL
-            // For this example, we'll return sample data
-            return [
-                {
-                    name: 'Employees',
-                    headers: ['employee_id', 'name', 'department_id', 'salary', 'hire_date'],
-                    rows: [
-                        [1, 'John Smith', 1, 60000.00, '2021-01-15'],
-                        [2, 'Jane Doe', 2, 75000.00, '2020-06-10'],
-                        [3, 'Bob Johnson', 1, 55000.00, '2022-03-05']
-                    ]
-                },
-                {
-                    name: 'Departments',
-                    headers: ['department_id', 'department_name', 'location'],
-                    rows: [
-                        [1, 'Engineering', 'Building A'],
-                        [2, 'Marketing', 'Building B']
-                    ]
-                }
-            ];
-        }
-        
-        // Display data visualization
-        function displayDataVisualization(tables) {
-            const container = document.getElementById('dataVisualization');
-            
-            tables.forEach(table => {
-                const tableDiv = document.createElement('div');
-                tableDiv.className = 'mb-4';
-                
-                let tableHtml = `
-                    <h6 class="mb-2"><i class="fas fa-database me-1"></i>${table.name} Sample Data</h6>
-                    <table class="table table-sm table-striped">
-                        <thead>
-                            <tr>
-                `;
-                
-                // Add headers
-                table.headers.forEach(header => {
-                    tableHtml += `<th>${header}</th>`;
-                });
-                
-                tableHtml += `
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                // Add rows
-                table.rows.forEach(row => {
-                    tableHtml += '<tr>';
-                    row.forEach(cell => {
-                        tableHtml += `<td>${cell}</td>`;
-                    });
-                    tableHtml += '</tr>';
-                });
-                
-                tableHtml += `
-                        </tbody>
-                    </table>
-                `;
-                
-                tableDiv.innerHTML = tableHtml;
-                container.appendChild(tableDiv);
-            });
-        }
     </script>
 </body>
 </html>
-{% endblock %}

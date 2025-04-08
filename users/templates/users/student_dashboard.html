@@ -5,102 +5,545 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
+        :root {
+            /* Primary colors */
+            --primary-color: #3a5998;     /* Muted Facebook blue instead of bright blue */
+            --secondary-color: #2d4373;   /* Darker shade for secondary */
+            --accent-color: #4d76bf;      /* Slightly lighter accent blue */
+            
+            /* UI colors */
+            --light-color: #f8f9fc;       /* Kept the same light background */
+            --dark-color: #293145;        /* Deeper navy blue */
+            
+            /* Status colors */
+            --success-color: #36b37e;     /* Softer green */
+            --warning-color: #e9af43;     /* Softer amber/yellow */
+            --danger-color: #d73a49;      /* Less saturated red */
+            --info-color: #3c9cd2;        /* Softer blue */
+            
+            /* Text colors - kept as is since they're already good */
+            --text-light: #f8f9fa;
+            --text-dark: #1e293b;
+        }
+
         body {
             display: flex;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: var(--text-dark);
+            overflow-x: hidden;
         }
+
+        /* Sidebar styling */
         .sidebar {
-            width: 250px;
+            width: 280px;
             height: 100vh;
-            background: #343a40;
-            padding: 20px;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            padding: 20px 0;
             position: fixed;
-            color: white;
+            color: var(--text-light);
+            box-shadow: var(--shadow);
+            z-index: 100;
+            transition: var(--transition);
         }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h4 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-bottom: 0;
+        }
+
         .sidebar a {
-            color: white;
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             display: block;
-            padding: 10px;
+            padding: 12px 20px;
             margin: 5px 0;
-            border-radius: 5px;
+            border-radius: 0;
+            transition: var(--transition);
+            font-weight: 500;
+            position: relative;
         }
+
         .sidebar a:hover, .sidebar .active {
-            background: #495057;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transform: translateX(5px);
         }
-        .content {
-            margin-left: 260px;
-            padding: 20px;
+
+        .sidebar a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
             width: 100%;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        .sidebar .dropdown-arrow {
+            float: right;
+            margin-top: 4px;
+            transition: transform 0.3s;
+        }
+
+        .sidebar .show-dropdown .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Content area */
+        .content {
+            margin-left: 280px;
+            padding: 30px;
+            width: calc(100% - 280px);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .welcome-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-header h2 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .date-display {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        /* Card styling */
+        .custom-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .custom-card:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Table styling */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .custom-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .custom-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #1e293b;
+        }
+
+        .custom-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .custom-table tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Button styling */
+        .btn-custom {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger-custom {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger-custom:hover {
+            background-color: #ef4444;
+            transform: translateY(-2px);
+        }
+
+        /* Badge styling */
+        .badge-custom {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .badge-success {
+            background-color: rgba(74, 222, 128, 0.2);
+            color: #15803d;
+        }
+
+        .badge-pending {
+            background-color: rgba(251, 191, 36, 0.2);
+            color: #b45309;
+        }
+
+        /* Form styling */
+        .form-control-custom {
+            padding: 12px;
+            border-radius: var(--border-radius);
+            border: 1px solid #e5e7eb;
+            width: 100%;
+            transition: var(--transition);
+        }
+
+        .form-control-custom:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+            outline: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        /* Chat container styling */
+        #sqlAssistantContainer {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 0;
+            height: 80vh;
+            max-width: 100%;
+            margin: auto;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        #chatBox {
+            background-color: #f8fafc;
+            padding: 20px;
+            height: calc(80vh - 170px);
+            overflow-y: auto;
+            margin-bottom: 0;
+        }
+
+        .chat-message {
+            margin-bottom: 20px;
+            display: flex;
+        }
+
+        .chat-message.bot {
+            justify-content: flex-start;
+        }
+
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+
+        .chat-message p {
+            padding: 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin: 0;
+        }
+
+        .chat-message.bot p {
+            background-color: white;
+            color: var(--text-dark);
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-message.user p {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background-color: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+
+        #query {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: 1px solid #e5e7eb;
+            margin-right: 10px;
+        }
+
+        #query:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            outline: none;
+        }
+
+        #submitBtn {
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        #submitBtn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                overflow: hidden;
+                padding: 20px 0;
+            }
+            
+            .sidebar-header h4, .sidebar a span {
+                display: none;
+            }
+            
+            .sidebar a {
+                text-align: center;
+                padding: 15px;
+            }
+            
+            .sidebar a i {
+                margin-right: 0;
+                font-size: 1.2rem;
+            }
+            
+            .content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+            }
+            
+            .sidebar-footer {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+            
+            .welcome-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+            
+            .date-display {
+                margin-top: 10px;
+            }
+        }
+
+        /* Animation for loading */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Messages count indicator */
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 15px;
+            background-color: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hidden class */
         .hidden {
             display: none;
         }
-        /* Chat Assistant Styles */
-        #sqlAssistantContainer {
-            background-color: #f8f9fa;
+
+        /* Course list styling */
+        #enrolledCoursesList {
+            list-style-type: none;
+            padding-left: 30px;
+            margin-top: 0;
+        }
+        
+        #enrolledCoursesList a {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        #enrolledCoursesList a:hover {
+            color: white;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
             border-radius: 10px;
-            padding: 20px;
-            height: 80vh;
-            max-width: 800px;
-            margin: auto;
         }
-        #chatBox {
-            background-color: white;
-            border-radius: 10px;
-            padding: 10px;
-            height: 60vh;
-            overflow-y: scroll;
-            margin-bottom: 20px;
-            max-height: 500px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
-        .chat-message {
-            margin-bottom: 15px;
+
+        /* Status badges */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
-        .chat-message.bot {
-            text-align: left;
+        
+        .status-enrolled {
+            background-color: rgba(74, 222, 128, 0.2);
+            color: #15803d;
         }
-        .chat-message.user {
-            text-align: right;
+        
+        .status-pending {
+            background-color: rgba(251, 191, 36, 0.2);
+            color: #b45309;
         }
-        .chat-message p {
-            padding: 10px;
-            border-radius: 10px;
+        
+        .status-expired {
+            background-color: rgba(248, 113, 113, 0.2);
+            color: #b91c1c;
+        }
+
+        /* Table action buttons */
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-decoration: none;
             display: inline-block;
+            margin-right: 5px;
         }
-        .chat-message.bot p {
-            background-color: #e9ecef;
-            max-width: 75%;
+        
+        .action-btn-apply {
+            background-color: var(--primary-color);
         }
-        .chat-message.user p {
-            background-color: #007bff;
+        
+        .action-btn-apply:hover {
+            background-color: var(--secondary-color);
             color: white;
-            max-width: 75%;
         }
-        #query {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+        
+        .action-btn-view {
+            background-color: var(--accent-color);
         }
-        #submitBtn {
-            margin-top: 10px;
-            padding: 10px 15px;
-            background-color: #007bff;
+        
+        .action-btn-view:hover {
+            background-color: #3b82f6;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #submitBtn:hover {
-            background-color: #0056b3;
         }
     </style>
 </head>
-<form id="enrollmentForm" method="post" action="{% url 'apply_for_course' %}">
+<form id="enrollmentForm" method="post" action="{% url 'apply_for_course' %}" class="hidden">
     {% csrf_token %}
     <input type="hidden" name="course_id" id="courseIdInput">
 </form>
@@ -108,333 +551,650 @@
 
     <!-- Sidebar Navigation -->
     <div class="sidebar">
-        <h4 class="text-center">Student Dashboard</h4>
-        <hr>
+        <div class="sidebar-header">
+            <h4><i class="fas fa-graduation-cap"></i> Student Portal</h4>
+        </div>
 
-        <!-- Home -->
-        <a class="ps-3" href="#" onclick="toggleSQLAssistant(event)">🏠 Home</a>
+        <!-- Navigation Links -->
+        <a href="#" onclick="toggleSQLAssistant(event)" class="active">
+            <i class="fas fa-home"></i> <span>Dashboard</span>
+        </a>
 
-        <!-- Course Enrollments -->
-        <a href="#" onclick="showCourseEnrollments()" class="ps-3"> 📌 Course Enrollments </a>
+        <a href="#" onclick="showCourseEnrollments()">
+            <i class="fas fa-book-open"></i> <span>Course Enrollments</span>
+        </a>
 
-        <!-- Question Bank -->
-        <a href="{% url 'all_questions' %}" class="ps-3">📝 Question Bank</a>
+        <a href="{% url 'all_questions' %}">
+            <i class="fas fa-question-circle"></i> <span>Question Bank</span>
+        </a>
 
-        <!-- Leaderborad -->
-        <a href="{% url 'view_leaderboard' %}" class="ps-3">🏆 Leaderboard</a>
+        <a href="{% url 'view_leaderboard' %}">
+            <i class="fas fa-trophy"></i> <span>Leaderboard</span>
+        </a>
 
-        <!-- Courses -->
-        <a href="{% url 'view_courses' %}" class="ps-3" onclick="toggleEnrolledCourses(event)">📚 Enrolled Courses ▾</a>
-        <ul id="enrolledCoursesList" class="hidden" style="list-style-type: none; padding-left: 20px;">
+        <a href="{% url 'view_courses' %}" onclick="toggleEnrolledCourses(event)">
+            <i class="fas fa-book"></i> <span>Enrolled Courses</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </a>
+        <ul id="enrolledCoursesList" class="hidden">
             {% for course in approved_courses %}
                 <li>
-                    <a href="{% url 'course_dashboard' course.course_id %}" class="ps-3">
-                        {{ course.course_title }}
+                    <a href="{% url 'course_dashboard' course.course_id %}">
+                        <i class="fas fa-book-reader"></i> {{ course.course_title }}
                     </a>
                 </li>
             {% empty %}
-                <li class="text-muted">No enrolled courses</li>
+                <li><a href="#" class="text-muted"><i class="fas fa-info-circle"></i> No enrolled courses</a></li>
             {% endfor %}
         </ul>
 
-        
-        <a href="#" onclick="showMessages()" class="ps-3">✉️ Messages</a>
-        <!-- Logout -->
-        <hr>
-        <a href="{% url 'logout' %}" class="text-danger">🚪 Logout</a>
+        <a href="#" onclick="showMessages()">
+            <i class="fas fa-envelope"></i> <span>Messages</span>
+            {% if messages|length > 0 %}
+            <span class="notification-badge">{{ messages|length }}</span>
+            {% endif %}
+        </a>
+
+        <div class="sidebar-footer">
+            <a href="{% url 'logout' %}" class="text-danger">
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </a>
+        </div>
     </div>
 
     <!-- Main Content -->
     <div class="content">
-        <h2>Welcome, {{user_name}}</h2>
+        <div class="welcome-header">
+            <h2><i class="fas fa-user-circle"></i> Welcome, {{user_name}}</h2>
+            <div class="date-display">
+                <i class="far fa-calendar-alt"></i> <span id="current-date">April 6, 2025</span>
+            </div>
+        </div>
 
         <!-- Course Enrollment Section (Hidden Initially) -->
-        <div id="courseEnrollmentContainer" class="hidden {% if show_course_enrollments %}show{% endif %}">
-            <h3>Course Enrollments</h3>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Course Title</th>
-                        <th>Instructor</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for course in courses %}
-                    <tr>
-                        <td>{{ course.course_title }}</td>
-                        <td>{{ course.instructor }}</td>
-                        <td>{{ course.course_start_date }}</td>
-                        <td>{{ course.course_end_date }}</td>
-                        <td>
-                            <a href="#" onclick="confirmApply({{ course.course_id }})">Apply</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5">No courses to enroll.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div id="courseEnrollmentContainer" class="hidden {% if show_course_enrollments %}show{% endif %} custom-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3><i class="fas fa-book-open"></i> Course Enrollments</h3>
+                <button class="btn btn-custom btn-primary-custom" onclick="toggleFilterPanel()">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+            <div class="card-body">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Course Title</th>
+                            <th>Instructor</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>
+                                <strong>{{ course.course_title }}</strong>
+                                <div class="text-muted small">{{ course.course_code }}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2" style="width: 30px; height: 30px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {{ course.instructor }}
+                                </div>
+                            </td>
+                            <td>{{ course.course_start_date }}</td>
+                            <td>{{ course.course_end_date }}</td>
+                            <td>
+                                <span class="status-badge status-pending">Open</span>
+                            </td>
+                            <td>
+                                <a href="#" onclick="confirmApply({{ course.course_id }})" class="action-btn action-btn-apply">
+                                    <i class="fas fa-plus-circle"></i> Apply
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-search fa-2x mb-3"></i>
+                                    <p>No courses available for enrollment at this time.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div id="coursesContainer" class="hidden">
-            <h3>Courses</h3>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Course Title</th>
-                        <th>Instructor</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for course in approved_courses %}
-                    <tr>
-                        <td>{{ course.course_title }}</td>
-                        <td>{{ course.instructor }}</td>
-                        <td>{{ course.course_start_date }}</td>
-                        <td>{{ course.course_end_date }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5">No courses enrolled.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Enrolled Courses Section -->
+        <div id="coursesContainer" class="hidden custom-card">
+            <div class="card-header">
+                <h3><i class="fas fa-book"></i> My Enrolled Courses</h3>
+            </div>
+            <div class="card-body">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Course Title</th>
+                            <th>Instructor</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in approved_courses %}
+                        <tr>
+                            <td>
+                                <strong>{{ course.course_title }}</strong>
+                                <div class="text-muted small">{{ course.course_code }}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2" style="width: 30px; height: 30px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {{ course.instructor }}
+                                </div>
+                            </td>
+                            <td>{{ course.course_start_date }}</td>
+                            <td>{{ course.course_end_date }}</td>
+                            <td>
+                                <span class="status-badge status-enrolled">Enrolled</span>
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <span class="small text-muted">65% Complete</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-graduation-cap fa-2x mb-3"></i>
+                                    <p>You're not enrolled in any courses yet.</p>
+                                    <button class="btn btn-custom btn-primary-custom mt-2" onclick="showCourseEnrollments()">
+                                        <i class="fas fa-search"></i> Browse Courses
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
         
-        <!-- Leaderboard Section (Hidden Initially) -->
-        <div id="leaderboardContainer" class="hidden">
-            <h3>Leaderboard</h3>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Student ID</th>
-                        <th>Problems Solved</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for entry in leaderboard %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ entry.student_name }}</td>
-                        <td>{{ entry.problems_solved }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3">No leaderboard data available.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Leaderboard Section -->
+        <div id="leaderboardContainer" class="hidden custom-card">
+            <div class="card-header">
+                <h3><i class="fas fa-trophy"></i> Leaderboard</h3>
+            </div>
+            <div class="card-body">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th width="10%">Rank</th>
+                            <th width="60%">Student</th>
+                            <th width="30%">Problems Solved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in leaderboard %}
+                        <tr>
+                            <td>
+                                {% if forloop.counter == 1 %}
+                                <span class="badge rounded-pill bg-warning text-dark"><i class="fas fa-crown"></i> #{{ forloop.counter }}</span>
+                                {% elif forloop.counter == 2 %}
+                                <span class="badge rounded-pill bg-secondary"><i class="fas fa-medal"></i> #{{ forloop.counter }}</span>
+                                {% elif forloop.counter == 3 %}
+                                <span class="badge rounded-pill" style="background-color: #cd7f32; color: white;"><i class="fas fa-medal"></i> #{{ forloop.counter }}</span>
+                                {% else %}
+                                <span class="badge rounded-pill bg-light text-dark">#{{ forloop.counter }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3" style="width: 40px; height: 40px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ entry.student_name }}</strong>
+                                        <div class="text-muted small">Student ID: {{ entry.student_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2" style="font-size: 1.2rem; font-weight: bold;">{{ entry.problems_solved }}</div>
+                                    <div class="progress flex-grow-1" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                            style="width: {{ entry.problems_solved }}%;" 
+                                            aria-valuenow="{{ entry.problems_solved }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-chart-bar fa-2x mb-3"></i>
+                                    <p>No leaderboard data available yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- SQL Query Assistant Section (Initially Hidden) -->
-        <div id="sqlAssistantContainer" class="hidden">
-            <h1>SQL Query Assistant</h1>
-
-            <div id="chatBox">
-                <!-- Bot messages will appear here -->
-                {% if error %}
-                <p class="error">Error: {{ error }}</p>
-                {% endif %} 
-                {% if sql_query %}
-                    <div class="chat-message bot">
-                        <p>Generated SQL: {{ sql_query }}</p>
-                    </div>
-                {% endif %}
-                {% if results %}
-                    <div class="chat-message bot">
-                        <p>Results:</p>
-                        <table>
-                            <thead>
-                                <tr>
-                                    {% for col in columns %}
-                                    <th>{{ col }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in results %}
-                                <tr>
-                                    {% for cell in row %}
-                                    <td>{{ cell }}</td>
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% endif %}
+        <!-- SQL Query Assistant Section -->
+        <div id="sqlAssistantContainer" class="hidden custom-card">
+            <div class="chat-header">
+                <h3><i class="fas fa-robot"></i> SQL Query Assistant</h3>
             </div>
 
-            <!-- User's input message -->
-            <div class="chat-message user">
-                <p>{{ query }}</p>
+            <div id="chatBox">
+                <!-- Welcome message -->
+                <div class="chat-message bot">
+                    <p>
+                        <strong>Hello! 👋</strong><br>
+                        I'm your SQL Assistant. Ask me any question about your data, and I'll help you generate the right SQL query.
+                    </p>
+                </div>
+                
+                <!-- Error messages if any -->
+                {% if error %}
+                <div class="chat-message bot">
+                    <p class="text-danger">
+                        <i class="fas fa-exclamation-circle"></i> Error: {{ error }}
+                    </p>
+                </div>
+                {% endif %} 
+                
+                <!-- SQL query if generated -->
+                {% if sql_query %}
+                <div class="chat-message bot">
+                    <p>
+                        <strong>Generated SQL:</strong><br>
+                        <code>{{ sql_query }}</code>
+                    </p>
+                </div>
+                {% endif %}
+                
+                <!-- Results if any -->
+                {% if results %}
+                <div class="chat-message bot">
+                    <p>
+                        <strong>Results:</strong><br>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        {% for col in columns %}
+                                        <th>{{ col }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in results %}
+                                    <tr>
+                                        {% for cell in row %}
+                                        <td>{{ cell }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </p>
+                </div>
+                {% endif %}
+                
+                <!-- User's previous query if any -->
+                {% if query %}
+                <div class="chat-message user">
+                    <p>{{ query }}</p>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Input form for new queries -->
-            <form method="post" action="{% url 'sql_query' %}">
-                {% csrf_token %}
-                <input type="text" name="query" id="query" placeholder="Ask your query here..." required />
-                <button type="submit" id="submitBtn">Submit</button>
-            </form>
+            <div class="chat-input-container">
+                <form method="post" action="{% url 'sql_query' %}" class="d-flex w-100">
+                    {% csrf_token %}
+                    <input type="text" name="query" id="query" placeholder="Ask your SQL query here..." required />
+                    <button type="submit" id="submitBtn">
+                        <i class="fas fa-paper-plane me-1"></i> Send
+                    </button>
+                </form>
+            </div>
         </div>
     
-            <!-- Inbox Messages Section -->
+        <!-- Inbox Messages Section -->
         <div id="messagesContainer" class="hidden">
-            <h3>Inbox</h3>
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Sender</th>
-                        <th>Message</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for message in messages %}
-                    <tr>
-                        <td>{{ message.sender.full_name }}</td>
-                        <td>{{ message.message_content }}</td>
-                        <td>{{ message.message_date }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3">No messages yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <h3>Send a Message</h3>
-            <form method="post" action="{% url 'send_message' %}">
-                {% csrf_token %}
-                <label for="receiver">Select Receiver:</label>
-                <select name="receiver_id" id="receiver" required>
-                    <option value="">-- Select a User --</option>
-                    {% for user in users %}
-                        <option value="{{ user.user_id }}">{{ user.full_name }}</option>
-                    {% endfor %}
-                </select>
-                <br>
-                <textarea name="message_content" rows="4" cols="50" required></textarea><br>
-                <button type="submit" class="btn btn-primary">Send</button>
-            </form>
+            <div class="row">
+                <!-- Inbox table -->
+                <div class="col-lg-7">
+                    <div class="custom-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3><i class="fas fa-envelope"></i> Inbox</h3>
+                            <span class="badge bg-primary rounded-pill">{{ messages|length }} messages</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for message in messages %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ message.sender.full_name }}</h5>
+                                        <small class="text-muted">{{ message.message_date }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ message.message_content }}</p>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Your inbox is empty.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Send Message Form -->
+                <div class="col-lg-5">
+                    <div class="custom-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-paper-plane"></i> Send a Message</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'send_message' %}" class="needs-validation" novalidate>
+                                {% csrf_token %}
+                                <div class="form-group mb-3">
+                                    <label for="receiver" class="form-label">
+                                        <i class="fas fa-user"></i> Recipient
+                                    </label>
+                                    <select name="receiver_id" id="receiver" class="form-control-custom" required>
+                                        <option value="">-- Select a recipient --</option>
+                                        {% for user in users %}
+                                            <option value="{{ user.user_id }}">{{ user.full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a recipient.
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="message_content" class="form-label">
+                                        <i class="fas fa-comment-alt"></i> Message
+                                    </label>
+                                    <textarea 
+                                        name="message_content" 
+                                        id="message_content" 
+                                        rows="5" 
+                                        class="form-control-custom" 
+                                        placeholder="Type your message here..." 
+                                        required
+                                    ></textarea>
+                                    <div class="invalid-feedback">
+                                        Please enter a message.
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-custom btn-primary-custom w-100">
+                                    <i class="fas fa-paper-plane me-2"></i> Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Contacts -->
+                    <div class="custom-card mt-4">
+                        <div class="card-header">
+                            <h3><i class="fas fa-address-book"></i> Quick Contacts</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                {% for user in users|slice:":5" %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3" style="width: 35px; height: 35px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ user.full_name }}</strong>
+                                            <div class="text-muted small">{{ user.role }}</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="selectRecipient('{{ user.user_id }}')">
+                                        <i class="fas fa-comment"></i>
+                                    </button>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-center py-3">
+                                    <span class="text-muted">No contacts available</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
     </div>
 
     <script>
-        function showCourseEnrollments(){
+        // Set current date in header
+        document.addEventListener('DOMContentLoaded', function() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            document.getElementById('current-date').textContent = today.toLocaleDateString('en-US', options);
+        });
+        
+        function showCourseEnrollments() {
+            hideAllContainers();
             document.getElementById("courseEnrollmentContainer").classList.remove("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-            document.getElementById("messagesContainer").classList.add("hidden");
-            document.getElementById("coursesContainer").classList.add("hidden");
         }
+        
         function confirmApply(courseId){
-            if (confirm("Please confirm that you want to apply for this course.")){
+            if (confirm("Please confirm that you want to apply for this course."+ courseId + ".")){
                 const form = document.getElementById("enrollmentForm");
                 document.getElementById("courseIdInput").value = courseId;
                 form.submit();
             }
         }
+        
         function confirmDelete(courseId) {
-            if (confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-                window.location.href = `/users/instructor/delete-course/${courseId}/`;
-            }
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/users/instructor/delete-course/${courseId}/`;
+                }
+            });
         }
+        
         window.onload = function() {
-            if (getQueryParam("show_course_enrollments") === "true"){
+            if (getQueryParam("show_course_enrollments") === "true") {
                 showCourseEnrollments();
-            }else if(getQueryParam("show_home") === "true"){
+            } else if (getQueryParam("show_home") === "true") {
                 toggleSQLAssistant();
-            }else if(getQueryParam("show_leaderboard") === "true"){
+            } else if (getQueryParam("show_leaderboard") === "true") {
                 showLeaderboard();
-            }else if(getQueryParam("show_messages") === "true"){
+            } else if (getQueryParam("show_messages") === "true") {
                 showMessages();
-            }else if(getQueryParam("show_courses") === "true"){
+            } else if (getQueryParam("show_courses") === "true") {
                 showCourses();
+            } else {
+                // Default view
+                toggleSQLAssistant();
             }
         };
+        
         function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
+        
+        function hideAllContainers() {
+            document.getElementById("sqlAssistantContainer").classList.add("hidden");
+            document.getElementById("courseEnrollmentContainer").classList.add("hidden");
+            document.getElementById("leaderboardContainer").classList.add("hidden");
+            document.getElementById("messagesContainer").classList.add("hidden");
+            document.getElementById("coursesContainer").classList.add("hidden");
+        }
+        
         function toggleSQLAssistant() {
+            hideAllContainers();
             document.getElementById("sqlAssistantContainer").classList.remove("hidden");
-            document.getElementById("courseEnrollmentContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-            document.getElementById("messagesContainer").classList.add("hidden");
-            document.getElementById("coursesContainer").classList.add("hidden");
+            setActiveNavItem('home');
         }
+        
         function showLeaderboard() {
+            hideAllContainers();
             document.getElementById("leaderboardContainer").classList.remove("hidden");
-            document.getElementById("courseEnrollmentContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("messagesContainer").classList.add("hidden");
-            document.getElementById("coursesContainer").classList.add("hidden");
+            setActiveNavItem('leaderboard');
         }
-        function showMessages(){
+        
+        function showMessages() {
+            hideAllContainers();
             document.getElementById("messagesContainer").classList.remove("hidden");
-            document.getElementById("courseEnrollmentContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
-            document.getElementById("coursesContainer").classList.add("hidden");
+            setActiveNavItem('messages');
         }
-        function showCourses(){
+        
+        function showCourses() {
+            hideAllContainers();
             document.getElementById("coursesContainer").classList.remove("hidden");
-            document.getElementById("messagesContainer").classList.add("hidden");
-            document.getElementById("courseEnrollmentContainer").classList.add("hidden");
-            document.getElementById("sqlAssistantContainer").classList.add("hidden");
-            document.getElementById("leaderboardContainer").classList.add("hidden");
+            setActiveNavItem('courses');
         }
+        
         function toggleEnrolledCourses(event) {
-            event.preventDefault(); // Prevent page reload
-        
+            event.preventDefault();
+            
             let courseList = document.getElementById("enrolledCoursesList");
-        
+            let linkElement = event.currentTarget;
+            
+            // Toggle dropdown arrow
+            linkElement.classList.toggle("show-dropdown");
+            
             // If already visible, hide it
             if (!courseList.classList.contains("hidden")) {
                 courseList.classList.add("hidden");
                 return;
             }
-        
+            
             // Show the list
             courseList.classList.remove("hidden");
-        
+            
             // If already populated, don't fetch again
             if (courseList.innerHTML.trim() !== "") return;
-        
+            
             // Fetch enrolled courses from Django (assuming available in template)
             let enrolledCourses = [
                 {% for course in approved_courses %}
                     { name: "{{ course.course_title }}", id: {{ course.course_id }} },
                 {% endfor %}
             ];
-        
+            
             if (enrolledCourses.length === 0) {
-                courseList.innerHTML = "<li>No enrolled courses.</li>";
+                courseList.innerHTML = "<li><a href='#' class='text-muted'><i class='fas fa-info-circle'></i> No enrolled courses</a></li>";
                 return;
             }
-        
+            
             // Populate the list with links to the new course view
             enrolledCourses.forEach(course => {
                 let listItem = document.createElement("li");
-                listItem.innerHTML = `<a href="{% url 'course_dashboard' course_id=0 %}`.replace('0', course.id) + `" class="text-white ps-3">📖 ${course.name}</a>`;
+                listItem.innerHTML = `<a href="{% url 'course_dashboard' course_id=0 %}`.replace('0', course.id) + `">
+                    <i class="fas fa-book-reader"></i> ${course.name}
+                </a>`;
                 courseList.appendChild(listItem);
             });
         }
         
-
+        function setActiveNavItem(id) {
+            // Remove active class from all nav items
+            document.querySelectorAll('.sidebar a').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to the clicked item
+            switch(id) {
+                case 'home':
+                    document.querySelector('.sidebar a:nth-child(1)').classList.add('active');
+                    break;
+                case 'enrollments':
+                    document.querySelector('.sidebar a:nth-child(2)').classList.add('active');
+                    break;
+                case 'questions':
+                    document.querySelector('.sidebar a:nth-child(3)').classList.add('active');
+                    break;
+                case 'leaderboard':
+                    document.querySelector('.sidebar a:nth-child(4)').classList.add('active');
+                    break;
+                case 'courses':
+                    document.querySelector('.sidebar a:nth-child(5)').classList.add('active');
+                    break;
+                case 'messages':
+                    document.querySelector('.sidebar a:nth-child(6)').classList.add('active');
+                    break;
+            }
+        }
+        
+        function selectRecipient(userId) {
+            const selectElement = document.getElementById('receiver');
+            selectElement.value = userId;
+            
+            // Scroll to the message form
+            document.getElementById('message_content').focus();
+        }
+        
+        function toggleFilterPanel() {
+            // Implement filter panel toggle logic here
+            alert('Filter functionality would be implemented here');
+        }
+        
+        // Form validation
+        (function () {
+            'use strict'
+            
+            // Fetch all forms we want to apply validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+            
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
     </script>
 
 </body>

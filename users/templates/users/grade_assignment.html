@@ -23,8 +23,8 @@
         <tbody>
             {% for submission in submissions %}
             <tr>
-                <td>{{ submission.student.full_name }}</td>
-                <td>{{ submission.assignment.assignment_title }}</td>
+                <td>{{ submission.student_name }}</td>
+                <td>{{ submission.assignment_title }}</td>
                 <td>
                     <a href="{% url 'download_submission' submission.submission_id %}" class="btn btn-primary">
                         Download ZIP

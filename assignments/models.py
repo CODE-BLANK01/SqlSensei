@@ -12,7 +12,7 @@ class Assignment(models.Model):
     instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return self.assignment_title
+        return self.assignment_id
 
     class Meta:
         db_table = 'Assignments'
