@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import User
+from django.db import connection
 
 class Course(models.Model):
     course_id = models.AutoField(primary_key=True)
@@ -12,7 +13,7 @@ class Course(models.Model):
     enrollment_status = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.course_title
+        return self.course_id
 
     class Meta:
         db_table = 'Courses'
@@ -38,3 +39,17 @@ class CourseEnrollment(models.Model):
 
     def __str__(self):
         return f"{self.student_id.username} -> {self.course_id.course_title} ({self.enrollment_status})"
+    
+    @staticmethod
+    def get_pending_enrollments_for_instructor(instructor_id):
+        with connection.cursor() as cursor:
+            query = """
+                SELECT ce.*
+                FROM Course_Enrollments ce
+                JOIN Courses c ON ce.course_id = c.course_id
+                WHERE ce.enrollment_status = %s AND c.instructor_id = %s
+            """
+            cursor.execute(query, ['Pending', instructor_id])
+            columns = [col[0] for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        return results

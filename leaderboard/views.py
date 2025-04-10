@@ -2,32 +2,45 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Leaderboard
 from users.models import User
 from django.contrib.auth.decorators import login_required
+from django.db import connection
 
-# Retrieves leaderboard entries and student names by joining Leaderboard and User models
+# Retrieves leaderboard entries and student names by joining Leaderboard and User models. Uses Dynamic SQL
 @login_required(login_url='/users/login/')
 def view_leaderboard(request):
-    # Fetch leaderboard data sorted by problems solved
-    leaderboard_data = Leaderboard.objects.all().order_by('-problems_solved')
     user_id = request.session.get("user_id")
-    user = User.objects.get(user_id = user_id)
-    user_role = user.role.lower()
+    # Fetch user role (student or instructor)
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT role 
+            FROM Users 
+            WHERE user_id = %s
+        """, [user_id])
+        user_role = cursor.fetchone()[0].lower()
 
+    # Determine the redirect URL based on user role
     if user_role == "student":
         url = "/users/student/dashboard/?show_leaderboard=true"
     elif user_role == "instructor":
         url = "/users/instructor/dashboard/?show_leaderboard=true"
-    
-    # For each leaderboard entry, fetch the corresponding student name from the User table
-    leaderboard_with_names = []
-    for entry in leaderboard_data:
-        student = User.objects.get(user_id=entry.student_id)  # Assuming 'student_id' in Leaderboard matches 'user_id' in User table
-        leaderboard_with_names.append({
-            "student_name": student.full_name,  # Add student name from User table
-            "problems_solved": entry.problems_solved,
-        })
-    
-    # Save the leaderboard data with names to the session
+
+    # Fetch leaderboard data along with corresponding student names using raw SQL
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT u.full_name, l.problems_solved
+            FROM Leaderboard l
+            JOIN Users u ON l.student_id = u.user_id
+            ORDER BY l.problems_solved DESC
+        """)
+        rows = cursor.fetchall()
+
+    # Prepare the leaderboard data
+    leaderboard_with_names = [{
+        "student_name": row[0],  # Student name from Users table
+        "problems_solved": row[1],  # Problems solved from Leaderboard table
+    } for row in rows]
+
+    # Save the leaderboard data to session
     request.session['leaderboard_data'] = leaderboard_with_names
     
-    # Redirect to the dashboard with leaderboard data
+    # Redirect to the appropriate dashboard with leaderboard data
     return redirect(url)

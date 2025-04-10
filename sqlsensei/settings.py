@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
+import tempfile
 from decouple import config
 
 OPENAI_API_KEY = config('OPENAI_API_KEY')
@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'courses',
     'questions',
     'assignments',
-    'feedback',
     'leaderboard',
     'chat',
     'rest_framework',
@@ -159,10 +158,11 @@ USE_TZ = True
 
 STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = tempfile.gettempdir()

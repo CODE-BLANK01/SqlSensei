@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
 from users.models import User
 from django.contrib.auth.decorators import login_required
+from datetime import date, datetime
 
 # Load environment variables (make sure .env contains OPENAI_API_KEY)
 load_dotenv()
@@ -12,7 +13,7 @@ load_dotenv()
 # Initialize OpenAI client with API key
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Queries INFORMATION_SCHEMA to fetch current database schema details
+# Queries INFORMATION_SCHEMA to fetch current database schema details to pass it on to OPENAI
 def get_database_schema():
     """
     Fetches the database schema (table names, column names, and data types).
@@ -36,7 +37,8 @@ def get_database_schema():
     )
     return schema_text
 
-# Handles user-submitted natural language queries, translates them using OpenAI, and executes safe SQL queries on the database
+# Handles user-submitted natural language queries, translates them using OpenAI, and executes safe SQL queries on the database.
+# Instructor can execute Inser, Update, Delete and Select, whereas Student can only execute select queries. Can perform any action based on User Input
 @login_required(login_url='/users/login/')
 def sql_query_view(request):
     user_id = request.session.get("user_id")
@@ -63,7 +65,7 @@ def sql_query_view(request):
         prompt = f"""
         You are an SQL expert. Convert the following natural language query into an SQL query.
         Use only the provided database schema. 
-        The current user is {user_id}
+        The current user is {user_id} and user role is {user_role}
 
         Schema:
         {schema_text}
@@ -100,6 +102,7 @@ def sql_query_view(request):
                     if sql_query.lower().startswith("select"):
                         columns = [col[0] for col in cursor.description]
                         results = cursor.fetchall()
+                        results = serialize_results(results)
                     else:
                         columns = []
                         results = [("Query executed successfully.",)]
@@ -128,3 +131,10 @@ def sql_query_view(request):
             return redirect(url)
 
     return redirect(url)
+
+def serialize_results(results):
+    def serialize_value(value):
+        if isinstance(value, (date, datetime)):
+            return value.isoformat()
+        return value
+    return [tuple(serialize_value(v) for v in row) for row in results]

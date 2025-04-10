@@ -8,89 +8,365 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assignments & Questions</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        .assignment-row {
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --border-radius: 8px;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: var(--secondary-color);
+            color: white;
+            border-bottom: none;
+            padding: 1rem 1.5rem;
+        }
+        
+        .assignment-header {
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: var(--light-bg);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+            font-weight: 600;
+        }
+        
+        .assignment-header:hover {
+            background-color: #e9ecef;
+        }
+        
+        .assignment-details {
+            padding: 1.5rem;
+        }
+        
+        .assignment-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .meta-item {
+            background-color: var(--light-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .meta-icon {
+            color: var(--primary-color);
+        }
+        
+        .btn-submit {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit:hover:not(:disabled) {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload input[type="file"] {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-upload-btn {
+            background-color: #f1f1f1;
+            border: 1px dashed #ccc;
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        
+        .file-upload-btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        .question-item {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--primary-color);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .question-item:hover {
+            transform: translateX(5px);
+            background-color: var(--light-bg);
+        }
+        
+        .status-tag {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background-color: #ffeeba;
+            color: #856404;
+        }
+        
+        .status-submitted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-graded {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1051;
+        }
+        
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .questions-section {
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0,0,0,.125);
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
-    {% if messages %}
-    <div class="container mt-3">
-        {% for message in messages %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Toast container for messages -->
+    <div class="toast-container">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Notification</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body bg-success text-white">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h3><i class="fas fa-tasks me-2"></i>Assignments & Questions</h3>
+            <p class="small">Manage and submit your course assignments</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Assignments Cards -->
+        {% for data in assignments %}
+        <div class="card">
+            <div class="card-body p-0">
+                <!-- Assignment Header -->
+                <div class="assignment-header" onclick="toggleQuestions({{ data.assignment.assignment_id }})">
+                    <div>
+                        <i class="fas fa-book me-2"></i>{{ data.assignment.assignment_title }}
+                    </div>
+                    <i id="icon-{{ data.assignment.assignment_id }}" class="fas fa-chevron-down toggle-icon collapsed"></i>
+                </div>
+                
+                <div class="assignment-details">
+                    <div class="assignment-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-star meta-icon"></i>
+                            <span>Grade: <strong>{{ data.grade|default:"Not graded" }}</strong></span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <i class="fas fa-clipboard-check meta-icon"></i>
+                            <span>Review: 
+                                {% if data.review_status == "Graded" %}
+                                    <span class="status-tag status-graded">Graded</span>
+                                {% else %}
+                                    <span class="status-tag status-pending">Pending</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <i class="fas fa-upload meta-icon"></i>
+                            <span>Submission: 
+                                {% if data.submission_status %}
+                                    <span class="status-tag status-submitted">Submitted</span>
+                                {% else %}
+                                    <span class="status-tag status-pending">Not submitted</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'submit_assignment' data.assignment.assignment_id %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="file-upload">
+                            <label for="zipFile-{{ data.assignment.assignment_id }}" class="file-upload-btn">
+                                <i class="fas fa-file-archive me-2"></i>
+                                <span id="file-name-{{ data.assignment.assignment_id }}">Choose ZIP file</span>
+                                <input type="file" id="zipFile-{{ data.assignment.assignment_id }}" name="zipFile" accept=".zip"
+                                      {% if data.review_status == "Graded" %}disabled{% endif %} required
+                                      onchange="updateFileName(this, '{{ data.assignment.assignment_id }}')">
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-submit"
+                                {% if data.review_status == "Graded" %}disabled{% endif %}>
+                            <i class="fas fa-upload me-2"></i>Submit Assignment
+                        </button>
+                    </form>
+                    
+                    <!-- Questions Section (Hidden by default) -->
+                    <div id="questions-{{ data.assignment.assignment_id }}" class="questions-section" style="display: none;">
+                        <h5 class="mb-3"><i class="fas fa-question-circle me-2"></i>Assignment Questions</h5>
+                        {% if data.questionsAssignment %}
+                            <div class="question-list">
+                                {% for question in data.questionsAssignment %}
+                                    <div class="question-item" {% if question.question_id %}onclick="window.open('{% url 'attempt_question' question.question_id %}?source=assignment', '_blank')"{% endif %}>
+                                        <h6 class="fw-bold">{{ question.question_title }}</h6>
+                                        <p class="mb-0">{{ question.description }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>No questions assigned for this assignment.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No assignments available at the moment.
         </div>
         {% endfor %}
     </div>
-    {% endif %}
-    <div class="container mt-4">
-        <h2 class="mb-3">Assignments & Questions</h2>
-        <table class="table table-bordered">
-            <thead class="table-dark">
-                <tr>
-                    <th>Assignment</th>
-                    <th>Questions</th>
-                    <th>Grade</th>
-                    <th>Grade Status</th>
-                    <th>Submission Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for data in assignments %}
-                <!-- Assignment row (clickable) -->
-                <tr class="table-primary assignment-row" data-bs-toggle="collapse" data-bs-target="#questions-{{ data.assignment.assignment_id }}">
-                    <td colspan="2">
-                        <strong>{{ data.assignment.assignment_title }}</strong>
-                        <span class="text-muted">(Click to toggle questions)</span>
-                    </td>
-                    <td>
-                        <form method="POST" enctype="multipart/form-data" action="{% url 'submit_assignment' data.assignment.assignment_id %}">
-                            {% csrf_token %}
-                            <input type="file" id="zipFile-{{ data.assignment.assignment_id }}" name="zipFile" accept=".zip"
-                                   {% if data.review_status == "Graded" %}disabled{% endif %} required>
-                            <button type="submit" class="btn btn-primary"
-                                    {% if data.review_status == "Graded" %}disabled{% endif %}>
-                                Submit
-                            </button>
-                        </form>
-                    </td>
-                    <td>{{ data.grade }}</td>
-                    <td>{{ data.review_status }}</td>
-                    <td>{{ data.submission_status }}</td>
-                </tr>
-                
-                <!-- Questions Row (Collapsible) -->
-                <tr>
-                    <td colspan="6">
-                        <div id="questions-{{ data.assignment.assignment_id }}" class="collapse">
-                            {% if data.questionsAssignment %}
-                                <ul class="list-group">
-                                    {% for question in data.questionsAssignment %}
-                                        <li class="list-group-item">
-                                            <strong>{{ question.question_title }}</strong> - {{ question.description }}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            {% else %}
-                                <p class="text-muted">No questions assigned.</p>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+
     <script>
-        function confirmSubmitAssignment(assignmentId) {
-            if (confirm("Are you sure you want to submit this assignment?")) {
-                window.location.href = `/users/instructor/submit-assignment/${assignmentId}/`;
+        // Auto-dismiss toasts after 5 seconds
+        setTimeout(function() {
+            var toasts = document.querySelectorAll('.toast');
+            toasts.forEach(function(toast) {
+                var bsToast = new bootstrap.Toast(toast);
+                bsToast.hide();
+            });
+        }, 5000);
+        
+        // Update file name when selected
+        function updateFileName(input, assignmentId) {
+            var fileName = input.files[0] ? input.files[0].name : 'Choose ZIP file';
+            document.getElementById('file-name-' + assignmentId).textContent = fileName;
+        }
+        
+        // Custom toggle function for questions section
+        function toggleQuestions(assignmentId) {
+            // Get the questions section element
+            var questionsSection = document.getElementById('questions-' + assignmentId);
+            var icon = document.getElementById('icon-' + assignmentId);
+            
+            // Toggle display
+            if (questionsSection.style.display === 'none') {
+                questionsSection.style.display = 'block';
+                icon.classList.remove('collapsed');
+            } else {
+                questionsSection.style.display = 'none';
+                icon.classList.add('collapsed');
             }
         }
+        
+        // Prevent event propagation when clicking on question items
+        document.querySelectorAll('.question-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // This will prevent the click event from bubbling up to parent elements
+                e.stopPropagation();
+            });
+        });
+        
+        // Confirm before submitting
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Are you sure you want to submit this assignment?')) {
+                    e.preventDefault();
+                }
+            });
+        });
     </script>
 </body>
 </html>

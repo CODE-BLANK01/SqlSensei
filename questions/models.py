@@ -19,6 +19,9 @@ class Question(models.Model):
     access_type = models.CharField(
         max_length=50, choices=QUESTION_ACCESS_TYPES, default='Public'
     )
+    schema_sql = models.TextField(blank=True, null=True, help_text="SQL to create the sample tables")
+    sample_data_sql = models.TextField(blank=True, null=True, help_text="SQL to insert sample data")
+    expected_output = models.TextField(blank=True, null=True, help_text="Description or representation of expected output")
     
     def __str__(self):
         return self.question_title
