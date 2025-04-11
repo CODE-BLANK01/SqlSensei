@@ -11,16 +11,41 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef
 from django.contrib.auth.decorators import login_required
 from django.db import connection
+from .models import EmailVerification
+from django.contrib import messages
+import random
+import json
+from django.core.mail import send_mail
+from django.utils import timezone
+from datetime import timedelta
 
 # Registers a new user by saving to the User table
 def register_view(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            return redirect("login")
+            email = form.cleaned_data["username"]
+            input_code = form.cleaned_data["verification_code"]
+
+            # 5分钟有效验证码校验
+            match = EmailVerification.objects.filter(
+                email=email,
+                code=input_code,
+                is_used=False,
+                created_at__gte=timezone.now() - timedelta(minutes=5)
+            ).first()
+
+            if not match:
+                form.add_error("verification_code", "Invalid or expired verification code.")
+            else:
+                match.is_used = True
+                match.save()
+                user = form.save()
+                return redirect("login")
+
     else:
         form = RegisterForm()
+
     return render(request, "users/register.html", {"form": form})
 
 # Authenticates user by querying the User table and checking credentials which were entered dynamically in textbox
@@ -211,3 +236,30 @@ def send_message(request):
             cursor.execute(sql, [user_id, receiver_id, message_content])
         return redirect(url)
     return redirect(url)
+
+@csrf_exempt
+def send_verification_code(request):
+
+    data = json.loads(request.body)
+    email = data.get("email")
+
+    if not email:
+        return JsonResponse({"message": "Email is required."}, status=400)
+
+    if User.objects.filter(username=email).exists():
+        return JsonResponse({"message": "This email is already registered."}, status=400)
+
+    # delete the old one if it has
+    EmailVerification.objects.filter(email=email).delete()
+
+    code = str(random.randint(100000, 999999))
+    EmailVerification.objects.create(email=email, code=code)
+
+    send_mail(
+        subject="SQLSensei - Your Verification Code",
+        message=f"Thank you for using SQLSensei. Your verification code is: {code}",
+        from_email=None,
+        recipient_list=[email],
+    )
+
+    return JsonResponse({"message": "Verification code sent successfully."})

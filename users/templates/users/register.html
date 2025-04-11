@@ -41,6 +41,16 @@
                     <label for="id_email" class="form-label">Email</label>
                     {{ form.username|add_class:"form-control" }}
                 </div>
+                <!-- Send code button -->
+                 <div class="mb-3 d-flex">
+                    <button type="button" onclick="sendCode()" class="btn btn-outline-secondary btn-sm me-2">Send Verification Code</button>
+                    <span id="code-status" class="text-muted small align-self-center"></span>
+                </div>
+                <!-- Verification code input -->
+                 <div class="mb-3">
+                    <label for="id_verification_code" class="form-label">Verification Code</label>
+                    {{ form.verification_code|add_class:"form-control" }}
+                </div>
 
                 <div class="mb-3">
                     <label for="id_password" class="form-label">Password</label>
@@ -91,7 +101,32 @@
 
             roleField.addEventListener("change", toggleFields);
             toggleFields(); // Set initial state based on preselected role (if any)
-        });
+        })
+        function sendCode() {
+            const emailInput = document.querySelector("input[name='username']");
+            const statusSpan = document.getElementById("code-status");
+            const email = emailInput.value;
+            if (!email) {
+                alert("Please enter your email first.");
+                return;
+            }
+            fetch("{% url 'send_verification_code' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                statusSpan.textContent = data.message || "Code sent.";
+            })
+            .catch(err => {
+                statusSpan.textContent = "Error sending code.";
+                console.error(err);
+            });
+        };
     </script>
 </body>
 </html>

@@ -14,4 +14,5 @@ urlpatterns = [
     path('course-enrollment/', include('courses.urls')),
     path('instructor/get-questions/<int:assignment_id>/', views.get_assignment_questions, name='get_assignment_questions'),
     path("student/messages/send/", views.send_message, name="send_message"),
+    path("send-code/", views.send_verification_code, name="send_verification_code")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

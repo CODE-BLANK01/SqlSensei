@@ -5,7 +5,7 @@ from users.models import User
 
 
 class Message(models.Model):
-    message_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='sent_messages')
     receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='received_messages')
     message_content = models.TextField()

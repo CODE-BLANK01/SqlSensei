@@ -12,6 +12,13 @@ class RegisterForm(forms.ModelForm):
     about_me = forms.CharField(widget=forms.Textarea, required=False)  # for Instructors
     grade_level = forms.ChoiceField(choices=[('UnderGraduate', 'UnderGraduate'), ('Graduate', 'Graduate')], required=False)  # for Students
 
+    verification_code = forms.CharField(
+        max_length=6,
+        required=True,
+        label="Email Verification Code", 
+        widget=forms.TextInput(attrs={"placeholder": "Enter the code sent to your email"})
+    )
+
     class Meta:
         model = User
         fields = ['username', 'full_name', 'password', 'role']
