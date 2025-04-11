@@ -23,10 +23,20 @@ class AssignmentSubmission(models.Model):
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     submission_date = models.DateTimeField(auto_now_add=True)
-    submitted_answer = models.FileField(upload_to='submissions/%Y/%m/%d/')
+    submitted_answer = models.FileField(
+    upload_to='submissions/%Y/%m/%d/',
+    null=True,
+    blank=True
+)
     submission_status = models.CharField(max_length=50, choices=[('Pending', 'Pending'), ('Submitted', 'Submitted'), ('Late', 'Late')])
     grade = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    review_status = models.CharField(max_length=50, choices=[('Graded', 'Graded'), ('Not Graded', 'Not Graded')])
+    review_status = models.CharField(
+    max_length=50,
+    choices=[('Graded', 'Graded'), ('Not Graded', 'Not Graded')],
+    default='Not Graded',
+    null=False,
+    blank=False,
+)
 
     def __str__(self):
         return f"Submission by {self.student} for {self.assignment.title}"
