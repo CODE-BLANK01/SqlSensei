@@ -67,3 +67,13 @@ class Student(models.Model):
 
     class Meta:
         db_table = 'Students'
+
+class EmailVerification(models.Model):
+    id = models.AutoField(primary_key=True)
+    email = models.EmailField()
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'EmailVerificationCodes'

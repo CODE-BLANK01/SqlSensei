@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import tempfile
 from decouple import config
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 OPENAI_API_KEY = config('OPENAI_API_KEY')
 
@@ -166,3 +169,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = tempfile.gettempdir()
+
+# SMTP Server Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'              
+EMAIL_PORT = 587                           
+EMAIL_USE_TLS = True                       
+EMAIL_HOST_USER = 'dwtintchev@gmail.com'   
+EMAIL_HOST_PASSWORD = os.getenv("SMTP_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER       
